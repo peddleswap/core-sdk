@@ -1,7 +1,7 @@
 {
   "name": "@peddleswap/sdk",
   "version": "0.1.0",
-  "description": "Addresses, ABIs and chain definitions for PeddleSwap \u00e2\u20ac\u201d a V2 + V3 exchange on Robinhood Chain.",
+  "description": "Addresses, ABIs and chain definitions for PeddleSwap on Robinhood Chain and Sepolia, generated from the deployed contracts.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -60,8 +60,15 @@
     "peddleswap",
     "robinhood-chain",
     "dex",
+    "amm",
     "uniswap",
-    "viem"
+    "uniswap-v3",
+    "viem",
+    "ethereum",
+    "web3",
+    "defi",
+    "typescript",
+    "abi"
   ],
   "publishConfig": {
     "access": "public"

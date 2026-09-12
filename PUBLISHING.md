@@ -45,7 +45,7 @@ default to private and npm rejects a private publish without a paid plan.
 gh auth login
 gh repo create peddles-markets/peddleswap-sdk \
   --public \
-  --description "Addresses, ABIs and chain definitions for PeddleSwap — mirror of peddleswap/packages/sdk"
+  --description "TypeScript SDK for PeddleSwap — addresses, ABIs, chain definitions and CREATE2 pool derivation for Robinhood Chain (4663) and Sepolia. Generated from the deployed contracts."
 ```
 
 Create it **empty** — no README, no license, no .gitignore. The first sync force-pushes a
@@ -73,7 +73,55 @@ Expect **28 passed, 2 skipped**. The two skips are the init-code-hash comparison
 read the Solidity sources and correctly cannot run without `contracts/`. They are skipped
 rather than passed, because a green result for a check that did not happen is a lie.
 
-### 4. CI secrets
+### 4. Repository description, topics and social preview
+
+**Description** (GitHub "About", and it should match what npm shows):
+
+```
+TypeScript SDK for PeddleSwap — addresses, ABIs, chain definitions and CREATE2 pool
+derivation for Robinhood Chain (4663) and Sepolia. Generated from the deployed contracts.
+```
+
+```sh
+gh repo edit peddles-markets/peddleswap-sdk   --description "TypeScript SDK for PeddleSwap — addresses, ABIs, chain definitions and CREATE2 pool derivation for Robinhood Chain (4663) and Sepolia. Generated from the deployed contracts."   --homepage "https://www.npmjs.com/package/@peddleswap/sdk"
+```
+
+The shorter line in `package.json` is what npm's search results show, and it is deliberately
+different — npm truncates around 120 characters, so it drops the chain ids and the CREATE2
+detail rather than having them cut mid-word.
+
+**Topics**, which are how anyone finds this on GitHub:
+
+```sh
+gh repo edit peddles-markets/peddleswap-sdk --add-topic   peddleswap,robinhood-chain,dex,amm,uniswap,uniswap-v3,viem,ethereum,web3,defi,typescript,abi
+```
+
+Same twelve as the `keywords` in `package.json`, on purpose — one list to update, and the
+two registries stay consistent.
+
+**Social preview.** `assets/og.png` is the card, 1280×640, GitHub's recommended size.
+
+It cannot be set from a file in the repository — GitHub only reads it from
+**Settings → General → Social preview → Upload an image**. That is a manual step and there
+is no API or `gh` flag for it, so it is easy to believe it is done because the file is
+committed. It is not.
+
+To change the card, edit `assets/og.html` and re-render — never hand-edit the PNG, which
+is why the source is committed beside it:
+
+```sh
+# from the monorepo root
+node scripts/chrome/shot.mjs packages/sdk/assets/og.html packages/sdk/assets/og.png 1280 640 2
+```
+
+It renders at 2x for retina and lands around 790 KB, inside GitHub's 1 MB limit. The
+palette is the product's own `--dark-*` tokens and the mark is the exact viewBox from
+`web/src/components/brand.tsx`, so the card cannot drift from the app by being redrawn
+from memory.
+
+`assets/` is not in `files`, so none of this ships in the npm tarball.
+
+### 5. CI secrets
 
 Two repository secrets on the **monorepo** (Settings → Secrets and variables → Actions):
 
