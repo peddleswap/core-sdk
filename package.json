@@ -23,7 +23,8 @@
     "gen": "node scripts/generate.mjs",
     "build": "npm run gen && tsup",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepublishOnly": "npm run gen && npm run typecheck && npm test && tsup"
   },
   "peerDependencies": {
     "viem": "^2"
