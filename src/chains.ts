@@ -1,5 +1,5 @@
 import { defineChain } from "viem";
-import { sepolia } from "viem/chains";
+import { sepolia as viemSepolia } from "viem/chains";
 
 /**
  * The chains this package ships contracts for.
@@ -51,10 +51,66 @@ export const robinhood = defineChain({
   blockExplorers: {
     default: { name: "Blockscout", url: "https://robinhoodchain.blockscout.com" },
   },
+  contracts: {
+    /**
+     * Canonical Multicall3, confirmed deployed at the usual address on this chain --
+     * `eth_getCode` returns 7618 bytes and `getBlockNumber()` answers.
+     *
+     * Declaring it is not cosmetic. viem only batches `readContract` calls through
+     * multicall when the chain object says where multicall lives; without this, a
+     * consumer reading twenty pools pays twenty round trips instead of one, and nothing
+     * warns them. viem's own `sepolia` carries this, so omitting it here would have made
+     * mainnet quietly slower than the testnet.
+     *
+     * `blockCreated` is deliberately absent rather than guessed. It is optional, and it
+     * only matters for historical reads at blocks before the contract existed. Finding it
+     * needs an archive node or the explorer's API -- the public endpoints here are not
+     * archival, and the explorer is behind a bot challenge. A wrong number would be worse
+     * than none: viem would skip batching for a range where multicall was in fact
+     * available, or batch into a block where it was not.
+     *
+     * WATCH OUT: `getBlockNumber()` on this contract returns the EVM's `block.number`,
+     * which on chain 4663 is a different numbering space from `eth_blockNumber` -- 25.9M
+     * against 61.0M when this was written. That is not a bug in multicall.
+     */
+    multicall3: { address: "0xcA11bde05977b3631167028862bE2a173976CA11" },
+  },
   testnet: false,
 });
 
-export { sepolia };
+/**
+ * Sepolia, with working RPC endpoints.
+ *
+ * This started as a plain re-export of viem's `sepolia`, which was wrong in a way that
+ * only showed up under load: viem's default transport for it is
+ * `https://11155111.rpc.thirdweb.com`, a public-good endpoint that answers 429 after a
+ * handful of calls. The README's own quick-start example hit the limit. Everything else
+ * about viem's definition is right, so only `rpcUrls` is replaced.
+ *
+ * All three below answered `eth_chainId` with 11155111 immediately before being written
+ * here, which is this project's standing rule for an RPC list. The list is short because
+ * short is what is true: of the four endpoints `api/src/lib/rpcs.ts` carries for Sepolia,
+ * three are now dead or paywalled -- `sepolia.drpc.org` answers "chain is not available
+ * on free plan", `1rpc.io/sepolia` reports its usage limit, and `rpc.sepolia.org` 404s.
+ * Six further candidates were probed and are absent because they failed, not because they
+ * were overlooked: blastapi 403s, omniatech 521s, and unifra, rockx and subquery do not
+ * resolve.
+ *
+ * thirdweb is last on purpose -- this hostname answers where viem's does not, but it is
+ * the same provider and the same rate limit is presumably behind it.
+ */
+export const sepolia = defineChain({
+  ...viemSepolia,
+  rpcUrls: {
+    default: {
+      http: [
+        "https://ethereum-sepolia-rpc.publicnode.com",
+        "https://sepolia.gateway.tenderly.co",
+        "https://sepolia.rpc.thirdweb.com",
+      ],
+    },
+  },
+});
 
 /** Every chain with a PeddleSwap deployment, keyed by id. */
 export const chains = {
@@ -69,8 +125,49 @@ export const chains = {
  * that provably contain nothing of ours, so this is the number to start from. It is in the
  * `eth_blockNumber` space -- see the note on `robinhood` above, which is a real trap on
  * this chain and has cost this project a wrong value in a committed file once already.
+ *
+ * WHY SEPOLIA'S NUMBER IS NOT THE ONE IN THE DEPLOYMENT RECORD
+ *
+ * `contracts/deployments/11155111.json` says 11672286. Every contract this package ships
+ * for Sepolia was created at 11680694 or later -- verified against the broadcast receipts
+ * in `contracts/broadcast/Deploy.s.sol/11155111/`, which record the block of each CREATE.
+ *
+ * 11672286 is the creation block of `lockerERC721Legacy`, the superseded locker. The
+ * record carries it forward on purpose: the indexer has to reach that contract's events,
+ * because it still holds assets and there is no admin unlock. So the record is right for
+ * the record's job.
+ *
+ * It is the wrong number *here*, because this package deliberately does not publish
+ * superseded addresses -- a start block chosen to cover a contract we do not ship is
+ * 8,408 blocks of guaranteed-empty scanning for every consumer. The error was in the safe
+ * direction, which is why it survived review: too early wastes time, too late loses
+ * events. Corrected rather than left, since "safe" is not the same as "right".
  */
 export const deploymentBlock = {
   4663: 61044184n,
-  11155111: 11672286n,
+  11155111: 11680694n,
 } as const;
+
+/** Every chain id this package ships, as a value you can iterate. */
+export const supportedChainIds = [4663, 11155111] as const;
+
+/**
+ * Narrow a plain `number` to a chain this package supports.
+ *
+ * This is the on-ramp the per-chain address typing needs in order to be worth having.
+ * `addresses` is keyed by literal chain id so that `addresses[4663].limitOrders` is a
+ * compile error rather than an undefined that becomes a transaction to the zero address.
+ * The cost is that `addresses[chainId]` does not compile when `chainId: number` -- which
+ * is exactly what `useChainId()` and every wallet event hand you.
+ *
+ * Without a guard the obvious move is `addresses[chainId as SupportedChainId]`, and that
+ * cast puts back precisely the hole the typing closed: on an unsupported chain it yields
+ * `undefined` and the next property read throws, or worse, spreads into a call as a zero
+ * address. So the guard ships, and the README points at it.
+ *
+ *     if (!isSupportedChain(chainId)) return null;
+ *     const router = addresses[chainId].swapRouter02;   // narrowed, no cast
+ */
+export function isSupportedChain(chainId: number): chainId is (typeof supportedChainIds)[number] {
+  return (supportedChainIds as readonly number[]).includes(chainId);
+}

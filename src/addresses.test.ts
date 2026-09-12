@@ -1,7 +1,8 @@
 import { getAddress, isAddress } from "viem";
 import { describe, expect, it } from "vitest";
 
-import { chains, deploymentBlock } from "./chains.js";
+import * as abis from "./generated/abis.js";
+import { chains, deploymentBlock, isSupportedChain, supportedChainIds } from "./chains.js";
 import { addresses, type SupportedChainId } from "./generated/addresses.js";
 
 /**
@@ -70,6 +71,56 @@ describe("addresses", () => {
       expect(chains[id].rpcUrls.default.http.length).toBeGreaterThan(0);
       expect(deploymentBlock[id]).toBeGreaterThan(0n);
     }
+  });
+
+  it("exports an ABI for every address it publishes", () => {
+    // The invariant that replaced a judgement call. An earlier version shipped ABIs only
+    // for contracts an integrator was assumed likely to call, and left six addresses with
+    // no way to call them -- including `limitOrders`, which is the contract the per-chain
+    // typing exists to protect, and `weth9`, where wrapping is the first thing anyone
+    // does. A documented exception list needed the same upkeep and would have rotted
+    // quietly, so it is asserted instead.
+    const missing: string[] = [];
+    for (const id of chainIds) {
+      for (const key of Object.keys(addresses[id])) {
+        if (!(`${key}Abi` in abis)) missing.push(`${id}.${key}`);
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
+  it("starts each backfill at or before the earliest contract", () => {
+    // Sepolia's deploy record says 11672286, which is the superseded locker's creation
+    // block, carried forward on purpose so the indexer can still reach its events. Every
+    // contract published here was created at 11680694 or later, verified against the
+    // broadcast receipts. Too early only wastes a scan; too late silently loses events,
+    // so this asserts the direction as well as the value.
+    expect(deploymentBlock[11155111]).toBe(11680694n);
+    expect(deploymentBlock[4663]).toBe(61044184n);
+  });
+
+  it("narrows a plain number through isSupportedChain", () => {
+    // Without this guard the only way to use a chainId from useChainId() is a cast, and
+    // `addresses[chainId as SupportedChainId]` puts back exactly the undefined this
+    // package's typing exists to prevent.
+    const fromWallet: number = 4663;
+    expect(isSupportedChain(fromWallet)).toBe(true);
+    expect(isSupportedChain(1)).toBe(false);
+    expect(isSupportedChain(46630)).toBe(false);
+    if (isSupportedChain(fromWallet)) {
+      expect(addresses[fromWallet].swapRouter02).toMatch(/^0x[0-9a-fA-F]{40}$/);
+    }
+    expect([...supportedChainIds].sort((a, b) => a - b)).toEqual([4663, 11155111]);
+  });
+
+  it("declares multicall3 so viem can batch", () => {
+    // viem only batches readContract through multicall when the chain object says where
+    // multicall lives. Robinhood Chain has it at the canonical address; omitting it made
+    // twenty pool reads twenty round trips, with nothing to warn the caller.
+    expect(chains[4663].contracts?.multicall3?.address).toBe(
+      "0xcA11bde05977b3631167028862bE2a173976CA11",
+    );
+    expect(chains[11155111].contracts?.multicall3?.address).toBeDefined();
   });
 
   it("keeps limit orders off chains that do not have them", () => {

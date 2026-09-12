@@ -1,19 +1,37 @@
 {
   "name": "@peddleswap/sdk",
   "version": "0.1.0",
-  "description": "Addresses, ABIs and chain definitions for PeddleSwap — a V2 + V3 exchange on Robinhood Chain.",
+  "description": "Addresses, ABIs and chain definitions for PeddleSwap \u00e2\u20ac\u201d a V2 + V3 exchange on Robinhood Chain.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peddles-markets/peddleswap.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://github.com/peddles-markets/peddleswap/tree/main/packages/sdk#readme",
+  "bugs": {
+    "url": "https://github.com/peddles-markets/peddleswap/issues"
+  },
   "type": "module",
   "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
   "main": "./dist/index.cjs",

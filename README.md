@@ -8,7 +8,7 @@ Two deployments ship here:
 | Chain | Id | Deployed at block |
 |---|---|---|
 | Robinhood Chain | `4663` | `61044184` |
-| Sepolia | `11155111` | `11672286` |
+| Sepolia | `11155111` | `11680694` |
 
 Everything is generated from the contracts repo's own build output — addresses from the
 deploy broadcast's record, ABIs from solc, CREATE2 init code hashes from the deployed
@@ -114,6 +114,19 @@ That is deliberate. A flat `Record<string, Address>` would let the second line c
 hand back `undefined`, which in a transaction builder becomes an approval or a fill sent to
 the zero address. Better a red squiggle than a lost transaction.
 
+The catch is that `addresses[chainId]` does not compile when `chainId: number` — which is
+exactly what `useChainId()` and every wallet event give you. Narrow it rather than casting:
+
+```ts
+import { addresses, isSupportedChain } from "@peddleswap/sdk";
+
+if (!isSupportedChain(chainId)) return null;   // chainId is now 4663 | 11155111
+const router = addresses[chainId].swapRouter02;
+```
+
+`addresses[chainId as SupportedChainId]` compiles too, and puts back the exact hole the
+typing closed — on an unsupported chain it yields `undefined` and the next read throws.
+
 Superseded contracts are **not** published here. Sepolia's deploy record keeps a
 `lockerERC721Legacy` address, because the lockers have no proxy and no admin unlock by
 design — a replaced locker keeps custody of what was locked in it forever, so that address
@@ -141,15 +154,21 @@ is in measured order, not alphabetical.
 
 - `addresses`, `SupportedChainId`, `AddressesFor` — per-chain, typed
 - `chains`, `robinhood`, `sepolia`, `deploymentBlock` — viem chain definitions
+- `supportedChainIds`, `isSupportedChain` — narrowing a plain `number`
 - `computeV3PoolAddress`, `computeV2PairAddress`, `sortTokens` — CREATE2 derivation
 - `FEE_TIERS`, `tickSpacings`, `FeeAmount`
 - `initCodeHashes`
-- 19 ABIs, each `as const` so viem infers argument and return types:
+- 25 ABIs, each `as const` so viem infers argument and return types — one for **every**
+  address the package ships, which is asserted by a test rather than left to judgement:
   `v2FactoryAbi`, `v2RouterAbi`, `v2PairAbi`, `v3FactoryAbi`, `v3PoolAbi`,
-  `swapRouterAbi`, `swapRouter02Abi`, `positionManagerAbi`, `quoterAbi`, `quoterV2Abi`,
-  `mixedRouteQuoterAbi`, `tickLensAbi`, `tokenValidatorAbi`, `interfaceMulticallAbi`,
-  `dynamicFeeModuleAbi`, `lockerERC20Abi`, `lockerERC721Abi`, `feeRouterAbi`,
-  `tokenFactoryAbi`
+  `v3PoolDeployerAbi`, `swapRouterAbi`, `swapRouter02Abi`, `positionManagerAbi`,
+  `quoterAbi`, `quoterV2Abi`, `mixedRouteQuoterAbi`, `tickLensAbi`, `tokenValidatorAbi`,
+  `interfaceMulticallAbi`, `dynamicFeeModuleAbi`, `lockerERC20Abi`, `lockerERC721Abi`,
+  `feeRouterAbi`, `tokenFactoryAbi`, `tokenDescriptorAbi`, `v3FeeAdapterAbi`,
+  `limitOrdersAbi`, `launchpadFeeAbi`, `weth9Abi`
+
+Reads batch through Multicall3 on both chains — the chain objects declare it, so viem
+folds a page of pool reads into one round trip without any setup.
 
 ## Verification
 
@@ -173,8 +192,8 @@ shipped for it, and asserts the cross-references agree — `v2Router.factory()` 
 `addresses[id].v2Factory`, and so on for all nine periphery contracts. That is the check
 that catches a deployment record listing a router from one deploy beside a factory from
 another: both addresses hold real working contracts, every ABI matches, quotes still come
-back, and they are quotes from a different exchange than the one you pointed at. 27 checks
-per chain, both currently passing. It needs network access, so it is a command rather than
+back, and they are quotes from a different exchange than the one you pointed at. 29 checks on
+Robinhood Chain and 33 on Sepolia, all currently passing. It needs network access, so it is a command rather than
 a test — a unit test that fails on a bad RPC minute teaches people to ignore failures.
 
 The tests are cross-checks, not self-checks. `pool.test.ts` compares the derivation
@@ -186,4 +205,12 @@ this package's build is what catches it.
 
 ## License
 
-MIT
+This package is MIT. The contracts it describes are not: per `docs/adr/0001-fork-strategy.md`
+the V2 sources are GPL-3.0 and the V3 sources GPL-2.0-or-later, inherited from the Uniswap
+code they fork.
+
+The split is deliberate and follows the upstream precedent exactly — Uniswap publishes
+`@uniswap/v3-sdk` under MIT against a BUSL-1.1 core, and `@uniswap/v2-sdk` under MIT
+against a GPL-3.0 core. What ships here is an interface description (ABIs, addresses, and
+CREATE2 arithmetic), not contract source, and it carries no compiled contract code. If you
+vendor or modify the contracts themselves, their licenses govern that, not this one.

@@ -68,10 +68,24 @@ const PROBES = [
   ["lockerERC721", "lockerERC721Abi", "lockFee"],
   ["feeRouter", "feeRouterAbi", "owner"],
   ["tokenFactory", "tokenFactoryAbi", "allTokensLength"],
+  // Sepolia-only. `skip` handles their absence on 4663 rather than this list branching.
+  ["limitOrders", "limitOrdersAbi", "orderCount"],
+  ["limitOrders", "limitOrdersAbi", "router", "swapRouter02"],
+  // `factory()` here is the TOKEN factory, not the V3 factory -- this splitter sits on
+  // launchpad token deployments. Asserting v3Factory failed, which is the cross-reference
+  // check doing its job on a wrong assumption of mine rather than a bad deployment.
+  ["launchpadFee", "launchpadFeeAbi", "factory", "tokenFactory"],
+  ["launchpadFee", "launchpadFeeAbi", "launchFee"],
+  // Both chains. v3PoolDeployer.factory() closes the loop the other way: the factory
+  // names the deployer AND the deployer names the factory, so a mismatched pair of
+  // addresses cannot pass both.
+  ["v3PoolDeployer", "v3PoolDeployerAbi", "factory", "v3Factory"],
+  ["weth9", "weth9Abi", "decimals"],
+  ["weth9", "weth9Abi", "symbol"],
 ];
 
 /** No zero-argument views to read, so the most that can be checked is that code exists. */
-const CODE_ONLY = ["tickLens", "interfaceMulticall", "weth9", "tokenDescriptor", "v3PoolDeployer"];
+const CODE_ONLY = ["tickLens", "interfaceMulticall", "tokenDescriptor", "v3FeeAdapter"];
 
 const requested = process.argv[2];
 const chainIds = requested ? [Number(requested)] : Object.keys(addresses).map(Number);

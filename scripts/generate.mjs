@@ -52,12 +52,21 @@ const CHAINS = [
 ];
 
 /**
- * The contracts worth an ABI, mapped to the artifact that holds it.
+ * Every address this package publishes gets an ABI. No exceptions.
  *
- * Not every key in a deployment record belongs here. `weth9` is a third party's contract
- * that happens to be recorded; `tokenDescriptor` and `v3PoolDeployer` are wired once at
- * deploy time and never called by an integrator. What is here is what somebody building on
- * PeddleSwap actually calls.
+ * An earlier version of this file shipped ABIs only for the contracts an integrator was
+ * judged likely to call, and left six addresses with no way to call them. That judgement
+ * was wrong in the one place it mattered most: `limitOrders` and `launchpadFee` are the
+ * contracts the per-chain address typing exists to protect -- the whole point of making
+ * `addresses[4663].limitOrders` a compile error is that `addresses[11155111].limitOrders`
+ * should then be usable, and without an ABI it is a dead end. `weth9` was the same
+ * mistake for a different reason: wrapping and unwrapping is not an exotic call, it is
+ * the first thing anyone does.
+ *
+ * So the rule is now an invariant rather than a judgement, and `src/addresses.test.ts`
+ * asserts it: if a key appears in the published address map, an ABI is exported for it.
+ * A documented exception list would have needed the same maintenance and would have gone
+ * stale silently.
  */
 const ABI_TARGETS = {
   v2Factory: "PeddleSwapV2Factory.sol/PeddleSwapV2Factory.json",
@@ -77,6 +86,18 @@ const ABI_TARGETS = {
   lockerERC721: "PeddleLockerERC721.sol/PeddleLockerERC721.json",
   feeRouter: "PeddleFeeRouter.sol/PeddleFeeRouter.json",
   tokenFactory: "PeddleTokenFactory.sol/PeddleTokenFactory.json",
+  limitOrders: "PeddleLimitOrders.sol/PeddleLimitOrders.json",
+  launchpadFee: "PeddleLaunchpadFee.sol/PeddleLaunchpadFee.json",
+  v3FeeAdapter: "PeddleV3PositionFeeAdapter.sol/PeddleV3PositionFeeAdapter.json",
+  // PeddleSwapV3TokenDescriptor, not Uniswap's NonfungibleTokenPositionDescriptor --
+  // Deploy.s.sol deploys the former and both artifacts exist, so the wrong one would
+  // build cleanly and decode nothing.
+  tokenDescriptor: "PeddleSwapV3TokenDescriptor.sol/PeddleSwapV3TokenDescriptor.json",
+  v3PoolDeployer: "PeddleSwapV3PoolDeployer.sol/PeddleSwapV3PoolDeployer.json",
+  // Canonical WETH9. On both chains this address was already deployed by somebody else
+  // and is merely recorded, but it is the same well-known contract and the ABI is the
+  // same, so there is no reason for a consumer to go and find it elsewhere.
+  weth9: "WETH9.sol/WETH9.json",
   // The pool itself is never in a deployment record -- pools are CREATE2-deployed per pair
   // -- but it is the contract an integrator reads most, so its ABI ships anyway.
   v3Pool: "PeddleSwapV3Pool.sol/PeddleSwapV3Pool.json",

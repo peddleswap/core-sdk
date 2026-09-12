@@ -13,7 +13,14 @@ export { addresses, type SupportedChainId, type AddressesFor } from "./generated
 export { initCodeHashes } from "./generated/initCodeHashes.js";
 export * from "./generated/abis.js";
 
-export { chains, deploymentBlock, robinhood, sepolia } from "./chains.js";
+export {
+  chains,
+  deploymentBlock,
+  isSupportedChain,
+  robinhood,
+  sepolia,
+  supportedChainIds,
+} from "./chains.js";
 
 export {
   FEE_TIERS,
