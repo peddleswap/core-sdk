@@ -42,8 +42,41 @@ import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "../../..");
 const OUT_DIR = join(HERE, "..", "src", "generated");
-const ARTIFACTS = join(ROOT, "contracts", "out");
-const DEPLOYMENTS = join(ROOT, "contracts", "deployments");
+const CONTRACTS = join(ROOT, "contracts");
+const ARTIFACTS = join(CONTRACTS, "out");
+const DEPLOYMENTS = join(CONTRACTS, "deployments");
+
+/**
+ * This package is generated inside the peddleswap monorepo and mirrored to a standalone
+ * repository, so it runs in two places that need different behaviour.
+ *
+ * In the monorepo, `contracts/` is a sibling and generation is the point: it re-reads the
+ * artifacts so nothing published can disagree with what was deployed.
+ *
+ * In the mirror there is no `contracts/` at all, and there cannot be -- the mirror carries
+ * only this directory. `src/generated` is committed precisely so that checkout still
+ * builds, typechecks and publishes. Regenerating there is not merely unnecessary, it is
+ * impossible, and the mirror is downstream of a monorepo push whose pre-push hook already
+ * regenerated.
+ *
+ * The distinction matters more than a missing-file error suggests, so it is drawn
+ * explicitly rather than inferred from a failed read:
+ *
+ *   - `contracts/` absent  -> a standalone checkout. Notice, exit 0, keep what is committed.
+ *   - `contracts/` present but `out/` empty -> a monorepo clone that has not been built.
+ *     Hard failure, because silently shipping stale generated files from a tree whose
+ *     contracts have moved is the exact drift this generator exists to prevent.
+ */
+if (!existsSync(CONTRACTS)) {
+  console.log("no ../../contracts — standalone checkout, keeping the committed src/generated.");
+  console.log("Regenerate in the peddleswap monorepo; this directory is a mirror of it.");
+  process.exit(0);
+}
+if (!existsSync(ARTIFACTS)) {
+  console.error("contracts/ exists but contracts/out/ does not.");
+  console.error("Run `forge build` in contracts/ — refusing to reuse possibly-stale generated files.");
+  process.exit(1);
+}
 
 /** Chains the package ships. A chain with no deployment record cannot be included. */
 const CHAINS = [

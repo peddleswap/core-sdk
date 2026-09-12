@@ -39,6 +39,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "gen": "node scripts/generate.mjs",
+    "gen:check": "node scripts/gen-check.mjs",
     "build": "npm run gen && tsup",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

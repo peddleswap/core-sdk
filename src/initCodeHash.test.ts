@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -27,6 +27,17 @@ import { initCodeHashes } from "./generated/initCodeHashes.js";
 
 const CONTRACTS = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "contracts");
 
+/**
+ * Absent in the standalone mirror of this package, which carries no `contracts/`.
+ *
+ * Skipped rather than failed, and skipped rather than quietly passed. This test compares
+ * the generated hashes against the literals in the Solidity source; with no source to
+ * read there is nothing to compare, and a green result would be a lie about a check that
+ * did not happen. The alarm belongs to the monorepo, where the contracts live and where
+ * the pre-push hook arms it on every `contracts/` change.
+ */
+const hasContracts = existsSync(join(CONTRACTS, "src", "v3", "periphery", "libraries", "PoolAddress.sol"));
+
 /** Pull the first 32-byte hex literal out of a Solidity source file. */
 function solidityHash(relPath: string, pattern: RegExp): string {
   const source = readFileSync(join(CONTRACTS, relPath), "utf8");
@@ -40,7 +51,7 @@ function solidityHash(relPath: string, pattern: RegExp): string {
   return `0x${match[1].toLowerCase()}`;
 }
 
-describe("init code hashes", () => {
+describe.skipIf(!hasContracts)("init code hashes", () => {
   it("matches the constant in PeddleSwapV2Library.pairFor", () => {
     const inSolidity = solidityHash(
       "src/v2/periphery/libraries/PeddleSwapV2Library.sol",
@@ -57,10 +68,15 @@ describe("init code hashes", () => {
     expect(initCodeHashes.v3Pool).toBe(inSolidity);
   });
 
+});
+
+// Not skipped in the mirror: these need no Solidity to read, and they are the only
+// assertions about the hashes that a standalone checkout can still make.
+describe("init code hash shape", () => {
   it("are distinct and well formed", () => {
-    // A pasting accident that set both to the same value would still satisfy the two
-    // assertions above only if the Solidity carried it too -- but it would sail through
-    // any test that merely checked the shape, so check the shape and the distinctness.
+    // A pasting accident that set both to the same value would satisfy the comparisons
+    // above only if the Solidity carried it too -- but it would sail through any test
+    // that merely checked the shape, so check the shape and the distinctness.
     expect(initCodeHashes.v2Pair).toMatch(/^0x[0-9a-f]{64}$/);
     expect(initCodeHashes.v3Pool).toMatch(/^0x[0-9a-f]{64}$/);
     expect(initCodeHashes.v2Pair).not.toBe(initCodeHashes.v3Pool);

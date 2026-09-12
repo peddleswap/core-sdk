@@ -1,0 +1,16 @@
+# LF everywhere in this package, regardless of the platform it is edited on.
+#
+# The generator writes LF. On Windows with core.autocrlf=true git wants CRLF in the working
+# tree, so every regenerated file shows as modified in `git status` while `git diff` reports
+# no change at all -- the content matches and only the line endings do not. That cost an
+# afternoon here: the first version of scripts/gen-check.mjs used `git status` and reported
+# a stale tree three runs in a row on a tree that was not stale.
+#
+# It matters more than local tidiness because this directory is mirrored to a standalone
+# repository that other people clone. Pinning LF means the mirror is byte-identical however
+# it was produced, and a diff there always means a real change.
+* text=auto eol=lf
+
+# Generated -- collapsed in GitHub diffs and excluded from language stats. They are still
+# reviewed (that is why they are committed), but 25 ABIs of JSON should not drown a PR.
+src/generated/** linguist-generated=true

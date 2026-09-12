@@ -175,17 +175,45 @@ folds a page of pool reads into one round trip without any setup.
 All 20 mainnet contracts are verified on Sourcify:
 `https://sourcify.dev/server/v2/contract/4663/<address>`.
 
+## Where this code lives
+
+This package is developed in the [PeddleSwap monorepo](https://github.com/peddles-markets/peddleswap)
+at `packages/sdk`, and mirrored to
+[`peddles-markets/peddleswap-sdk`](https://github.com/peddles-markets/peddleswap-sdk).
+
+**If you are reading this in `peddleswap-sdk`, that is the mirror.** It is a read-only
+projection, force-pushed on every change, so a commit made directly here is destroyed by
+the next sync. Issues are welcome; pull requests should go to the monorepo, where
+`packages/sdk` sits next to the contracts it is generated from.
+
+The split exists because of that generation. Addresses and ABIs are derived from
+`contracts/`, which cannot be done from a standalone checkout — so the monorepo is the
+source of truth, and the mirror is here so you can read, clone and `npm install` the
+package without pulling a DEX, an indexer and a Next.js app alongside it.
+
+`src/generated` is committed precisely so the mirror still builds, typechecks and tests on
+its own.
+
 ## Development
 
 ```sh
 npm install
 npm run gen        # regenerate src/generated from ../../contracts
+npm run gen:check  # regenerate and fail if anything moved (what CI runs)
 npm run build
 npm test
 ```
 
-`npm run gen` reads `../../contracts/out` and `../../contracts/deployments`, so a clone
-needs `forge build` to have been run in `contracts/` first.
+In the monorepo, `npm run gen` reads `../../contracts/out` and
+`../../contracts/deployments`, so `forge build` must have been run in `contracts/` first.
+
+In the mirror there is no `contracts/` and there cannot be. `npm run gen` detects that,
+says so, and leaves the committed files alone; `npm test` reports **28 passed, 2 skipped**,
+the two skips being the init-code-hash comparisons that have no Solidity to read. They are
+skipped rather than passed, because a green result for a check that did not happen would
+be a lie.
+
+Release and mirroring instructions are in [PUBLISHING.md](./PUBLISHING.md).
 
 `npm run verify:live` checks every shipped address against the live chain using the ABI
 shipped for it, and asserts the cross-references agree — `v2Router.factory()` must equal
