@@ -98,6 +98,11 @@ export const robinhood = defineChain({
  *
  * thirdweb is last on purpose -- this hostname answers where viem's does not, but it is
  * the same provider and the same rate limit is presumably behind it.
+ *
+ * `sepolia.gateway.tenderly.co` was here and is gone. It answered when this list was
+ * written and failed three consecutive probes a few hours later, which is the whole reason
+ * the rule is "probe before writing, and probe again before trusting": an endpoint that
+ * worked once is not an endpoint that works.
  */
 export const sepolia = defineChain({
   ...viemSepolia,
@@ -105,7 +110,7 @@ export const sepolia = defineChain({
     default: {
       http: [
         "https://ethereum-sepolia-rpc.publicnode.com",
-        "https://sepolia.gateway.tenderly.co",
+        "https://0xrpc.io/sep",
         "https://sepolia.rpc.thirdweb.com",
       ],
     },
