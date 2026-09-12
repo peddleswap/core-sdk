@@ -24,6 +24,7 @@
     "build": "npm run gen && tsup",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "verify:live": "npm run build && node scripts/verify-live.mjs",
     "prepublishOnly": "npm run gen && npm run typecheck && npm test && tsup"
   },
   "peerDependencies": {

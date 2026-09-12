@@ -168,6 +168,15 @@ npm test
 `npm run gen` reads `../../contracts/out` and `../../contracts/deployments`, so a clone
 needs `forge build` to have been run in `contracts/` first.
 
+`npm run verify:live` checks every shipped address against the live chain using the ABI
+shipped for it, and asserts the cross-references agree — `v2Router.factory()` must equal
+`addresses[id].v2Factory`, and so on for all nine periphery contracts. That is the check
+that catches a deployment record listing a router from one deploy beside a factory from
+another: both addresses hold real working contracts, every ABI matches, quotes still come
+back, and they are quotes from a different exchange than the one you pointed at. 27 checks
+per chain, both currently passing. It needs network access, so it is a command rather than
+a test — a unit test that fails on a bad RPC minute teaches people to ignore failures.
+
 The tests are cross-checks, not self-checks. `pool.test.ts` compares the derivation
 against vectors produced by `contracts/script/PrintPoolAddresses.s.sol`, which mirrors the
 Solidity the routers run. `initCodeHash.test.ts` reads the hardcoded constants back out of
