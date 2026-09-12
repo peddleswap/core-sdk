@@ -1,0 +1,48 @@
+{
+  "name": "@peddleswap/sdk",
+  "version": "0.1.0",
+  "description": "Addresses, ABIs and chain definitions for PeddleSwap — a V2 + V3 exchange on Robinhood Chain.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "gen": "node scripts/generate.mjs",
+    "build": "npm run gen && tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "viem": "^2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "tsup": "^8",
+    "typescript": "^5",
+    "viem": "^2",
+    "vitest": "^3"
+  },
+  "keywords": [
+    "peddleswap",
+    "robinhood-chain",
+    "dex",
+    "uniswap",
+    "viem"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
