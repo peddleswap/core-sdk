@@ -1,5 +1,7 @@
 import { defineChain } from "viem";
-import { sepolia as viemSepolia } from "viem/chains";
+import { base as viemBase, sepolia as viemSepolia } from "viem/chains";
+
+import { addresses, type SupportedChainId } from "./generated/addresses.js";
 
 /**
  * The chains this package ships contracts for.
@@ -117,10 +119,80 @@ export const sepolia = defineChain({
   },
 });
 
-/** Every chain with a PeddleSwap deployment, keyed by id. */
+/**
+ * Base mainnet (8453) -- REGISTERED, NOT YET DEPLOYED.
+ *
+ * The definition ships ahead of the contracts so a consumer can already build a client
+ * for it, but `addresses` has no 8453 entry and `isSupportedChain(8453)` is false until
+ * the deploy writes contracts/deployments/8453.json and the package is regenerated. See
+ * `CHAINS` in scripts/generate.mjs for the exact steps.
+ *
+ * viem's own `base` is right apart from its RPC list, which is the single
+ * `mainnet.base.org` -- and that endpoint caps `eth_getLogs` at 2,000 blocks. So only
+ * `rpcUrls` is replaced, in the same order as `api/src/lib/rpcs.ts`. Every URL below
+ * answered `eth_chainId` with 8453 three times out of three on 2026-09-24; `1rpc.io/base`
+ * was probed and is absent because it answered -32001 "usage limit" every time. Only
+ * publicnode served a 5000-block `eth_getLogs`; drpc and nodies refuse log ranges on
+ * their free plans, so they are tail entries for `eth_call`.
+ *
+ * Multicall3 is viem's declaration, the canonical address -- confirmed to have code on
+ * 8453 the same day.
+ */
+export const base = defineChain({
+  ...viemBase,
+  rpcUrls: {
+    default: {
+      http: [
+        "https://base-rpc.publicnode.com",
+        "https://mainnet.base.org",
+        "https://base.drpc.org",
+        "https://base-pokt.nodies.app",
+      ],
+    },
+  },
+});
+
+/**
+ * Anubis Chain (6714) -- REGISTERED, NOT YET DEPLOYED. viem has no definition for it.
+ *
+ * Checked live against https://rpc.anubispace.org on 2026-09-24:
+ *
+ *   - `eth_chainId` returns 6714. It is the only public endpoint the chain publishes.
+ *   - The native coin is DAI, and it is ALSO an ERC-20 at
+ *     0x83fd06F0846d9D90B3016bF670Efe2E0B11cDe14 (`symbol()` "DAI", `decimals()` 18):
+ *     `eth_getBalance` and `balanceOf` return the same number for an account. There is
+ *     no separate wrapped native to route through.
+ *   - Multicall3 is NOT at the canonical 0xcA11bde0... address -- `eth_getCode` there is
+ *     empty. It lives at 0x2BaB3619..., which has code and answers `getBlockNumber()`.
+ *     Declaring the canonical address would make every batched read revert.
+ *
+ * `blockCreated` is omitted for the same reason as on `robinhood`: a guess is worse than
+ * nothing.
+ */
+export const anubis = defineChain({
+  id: 6714,
+  name: "Anubis Chain",
+  nativeCurrency: { name: "Dai", symbol: "DAI", decimals: 18 },
+  rpcUrls: { default: { http: ["https://rpc.anubispace.org"] } },
+  blockExplorers: { default: { name: "Anubisscan", url: "https://anubisscan.io" } },
+  contracts: {
+    multicall3: { address: "0x2BaB36196519Ce9Cc31Bc4899FCBB8124A413b02" },
+  },
+  testnet: false,
+});
+
+/**
+ * Every chain this package knows, keyed by id -- deployed or registered.
+ *
+ * This is a SUPERSET of the chains in `addresses`: Base (8453) and Anubis (6714) are here
+ * before their contracts are. Having a viem definition says nothing about whether
+ * PeddleSwap is deployed there; `isSupportedChain` is the question to ask for that.
+ */
 export const chains = {
   4663: robinhood,
   11155111: sepolia,
+  8453: base,
+  6714: anubis,
 } as const;
 
 /**
@@ -151,10 +223,21 @@ export const chains = {
 export const deploymentBlock = {
   4663: 61044184n,
   11155111: 11680694n,
-} as const;
+  // `satisfies` is the reminder: when a regenerate adds a chain to `addresses` (Base,
+  // once deployments/8453.json exists), this stops compiling until its block is added.
+  // Take it from the broadcast receipts, not blindly from the record's `deployBlock`.
+} as const satisfies Record<SupportedChainId, bigint>;
 
-/** Every chain id this package ships, as a value you can iterate. */
-export const supportedChainIds = [4663, 11155111] as const;
+/**
+ * Every chain id this package ships addresses for, as a value you can iterate.
+ *
+ * Derived from the generated `addresses` rather than written out, so a chain that is only
+ * registered (see `chains`) is not in it, and a newly deployed one joins it on the next
+ * `npm run gen` with no edit here.
+ */
+export const supportedChainIds: readonly SupportedChainId[] = Object.keys(addresses)
+  .map(Number)
+  .sort((a, b) => a - b) as SupportedChainId[];
 
 /**
  * Narrow a plain `number` to a chain this package supports.
@@ -173,6 +256,6 @@ export const supportedChainIds = [4663, 11155111] as const;
  *     if (!isSupportedChain(chainId)) return null;
  *     const router = addresses[chainId].swapRouter02;   // narrowed, no cast
  */
-export function isSupportedChain(chainId: number): chainId is (typeof supportedChainIds)[number] {
+export function isSupportedChain(chainId: number): chainId is SupportedChainId {
   return (supportedChainIds as readonly number[]).includes(chainId);
 }

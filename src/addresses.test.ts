@@ -123,6 +123,28 @@ describe("addresses", () => {
     expect(chains[11155111].contracts?.multicall3?.address).toBeDefined();
   });
 
+  it("registers Base and Anubis without publishing addresses for them", () => {
+    // Registered, not deployed: the viem definitions ship so a client can be built, but
+    // until contracts/deployments/<id>.json exists and the package is regenerated there
+    // is nothing to call, and isSupportedChain must say so. When Base deploys, 8453 moves
+    // out of this test and into "ships both chains" above.
+    expect(chains[8453].id).toBe(8453);
+    expect(chains[6714].id).toBe(6714);
+    for (const id of [8453, 6714]) {
+      expect(isSupportedChain(id)).toBe(false);
+      expect(Object.keys(addresses).map(Number)).not.toContain(id);
+      expect(chains[id as 8453 | 6714].rpcUrls.default.http.length).toBeGreaterThan(0);
+    }
+    // Anubis pays gas in DAI, and its Multicall3 is not at the canonical address.
+    expect(chains[6714].nativeCurrency.symbol).toBe("DAI");
+    expect(chains[6714].contracts?.multicall3?.address).toBe(
+      "0x2BaB36196519Ce9Cc31Bc4899FCBB8124A413b02",
+    );
+    expect(chains[8453].contracts?.multicall3?.address.toLowerCase()).toBe(
+      "0xca11bde05977b3631167028862be2a173976ca11",
+    );
+  });
+
   it("keeps limit orders off chains that do not have them", () => {
     // Sepolia carries `limitOrders` and `launchpadFee`; Robinhood Chain does not yet. The
     // per-chain object literals make `addresses[4663].limitOrders` a compile error rather

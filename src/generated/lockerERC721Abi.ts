@@ -29,6 +29,11 @@ export const lockerERC721Abi = [
         "internalType": "uint256"
       },
       {
+        "name": "_feeToken",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
         "name": "nfts",
         "type": "address[]",
         "internalType": "address[]"
@@ -138,6 +143,19 @@ export const lockerERC721Abi = [
   {
     "type": "function",
     "name": "feeRecipient",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "feeToken",
     "inputs": [],
     "outputs": [
       {
@@ -902,6 +920,11 @@ export const lockerERC721Abi = [
   {
     "type": "error",
     "name": "LengthMismatch",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NativeFeeNotAccepted",
     "inputs": []
   },
   {

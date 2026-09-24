@@ -21,6 +21,12 @@ npm install @peddleswap/sdk viem
 
 `viem` is a peer dependency; bring your own so you don't end up with two copies.
 
+Two more chains are **registered but not yet deployed**: Base (`8453`) and Anubis Chain
+(`6714`). Their viem definitions ship in `chains` (and as `base` / `anubis`) so you can
+build a client for them, but `addresses` has no entry for either and
+`isSupportedChain(8453)` returns `false` until the contracts are live and a new version is
+published.
+
 ## Quick start
 
 ```ts
@@ -153,7 +159,8 @@ is in measured order, not alphabetical.
 ## What's exported
 
 - `addresses`, `SupportedChainId`, `AddressesFor` — per-chain, typed
-- `chains`, `robinhood`, `sepolia`, `deploymentBlock` — viem chain definitions
+- `chains`, `robinhood`, `sepolia`, `base`, `anubis`, `deploymentBlock` — viem chain
+  definitions (`chains` also carries the registered-but-undeployed Base and Anubis)
 - `supportedChainIds`, `isSupportedChain` — narrowing a plain `number`
 - `computeV3PoolAddress`, `computeV2PairAddress`, `sortTokens` — CREATE2 derivation
 - `FEE_TIERS`, `tickSpacings`, `FeeAmount`
@@ -214,6 +221,33 @@ skipped rather than passed, because a green result for a check that did not happ
 be a lie.
 
 Release and mirroring instructions are in [PUBLISHING.md](./PUBLISHING.md).
+
+### Adding a chain after its deploy
+
+Base (`8453`) and Anubis (`6714`) are listed in `CHAINS` in `scripts/generate.mjs` with
+`pending: true`: a missing `contracts/deployments/<id>.json` is skipped with a notice
+rather than failing the build. Once the deploy has written that record:
+
+1. `npm run gen` — the chain appears in `src/generated/addresses.ts` on its own, and
+   `supportedChainIds` / `isSupportedChain` follow because they derive from it.
+2. Add its entry to `deploymentBlock` in `src/chains.ts`. `npm run typecheck` fails until
+   you do (`satisfies Record<SupportedChainId, bigint>`). Take the block of the earliest
+   CREATE from `contracts/broadcast/Deploy.s.sol/<id>/`, not blindly the record's
+   `deployBlock` — see the Sepolia note there for why the two can differ.
+3. Update the chain lists asserted in `src/addresses.test.ts` ("ships both chains", the
+   `supportedChainIds` expectation, and remove the id from the "registers Base and
+   Anubis" test), then `npm test`.
+4. `npm run verify:live -- <id>` against the live chain, and `npm run gen:check`.
+5. Remove `pending: true` for that chain in `scripts/generate.mjs`, so a record that later
+   goes missing fails the build instead of silently dropping the chain.
+6. Update the chain table at the top of this README and the package description.
+
+**Locker ABIs note.** `lockerERC20Abi` / `lockerERC721Abi` are generated from the current
+sources, which added `feeToken()`, a `_feeToken` constructor argument and the
+`NativeFeeNotAccepted` error. The lockers already deployed on `4663` and `11155111`
+predate that: `feeToken()` reverts on them (checked 2026-09-24). Every other function in
+the ABI is unchanged, so existing reads still decode; just do not call `feeToken()` on
+those two chains.
 
 `npm run verify:live` checks every shipped address against the live chain using the ABI
 shipped for it, and asserts the cross-references agree — `v2Router.factory()` must equal

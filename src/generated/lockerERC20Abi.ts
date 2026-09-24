@@ -27,6 +27,11 @@ export const lockerERC20Abi = [
         "name": "_lockFee",
         "type": "uint256",
         "internalType": "uint256"
+      },
+      {
+        "name": "_feeToken",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "nonpayable"
@@ -59,6 +64,19 @@ export const lockerERC20Abi = [
   {
     "type": "function",
     "name": "feeRecipient",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "feeToken",
     "inputs": [],
     "outputs": [
       {
@@ -685,6 +703,11 @@ export const lockerERC20Abi = [
   {
     "type": "error",
     "name": "InsufficientLockedAmount",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NativeFeeNotAccepted",
     "inputs": []
   },
   {

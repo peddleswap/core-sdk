@@ -78,10 +78,29 @@ if (!existsSync(ARTIFACTS)) {
   process.exit(1);
 }
 
-/** Chains the package ships. A chain with no deployment record cannot be included. */
+/**
+ * Chains the package ships. A chain with no deployment record cannot be included.
+ *
+ * `pending: true` marks a chain that is REGISTERED but not yet deployed: its viem
+ * definition ships in src/chains.ts, but there is no contracts/deployments/<id>.json yet.
+ * For those a missing record is skipped with a notice instead of failing, and the chain
+ * simply does not appear in `addresses` -- so `isSupportedChain(8453)` stays false and
+ * `addresses[8453]` stays a compile error until real addresses exist. The moment the
+ * deploy writes the record, the next `npm run gen` picks it up with no change here.
+ *
+ * A chain WITHOUT the flag still hard-fails on a missing record: that is a deployed chain
+ * whose record has gone missing, which must never silently drop out of the package.
+ *
+ * After the Base deploy writes contracts/deployments/8453.json (see README, "Adding a
+ * chain after its deploy"): `npm run gen`, add `deploymentBlock[8453]` in src/chains.ts
+ * (tsc refuses to build until you do), update the chain lists asserted in
+ * src/addresses.test.ts, then `npm run verify:live -- 8453`. Drop `pending` once shipped.
+ */
 const CHAINS = [
   { id: 4663, key: "robinhood", label: "Robinhood Chain" },
   { id: 11155111, key: "sepolia", label: "Sepolia" },
+  { id: 8453, key: "base", label: "Base", pending: true },
+  { id: 6714, key: "anubis", label: "Anubis Chain", pending: true },
 ];
 
 /**
@@ -194,11 +213,13 @@ function readArtifactAbi(relPath) {
 
 const chainBlocks = [];
 const missingRecords = [];
+const pendingChains = [];
 
 for (const chain of CHAINS) {
   const file = join(DEPLOYMENTS, `${chain.id}.json`);
   if (!existsSync(file)) {
-    missingRecords.push(chain.id);
+    if (chain.pending) pendingChains.push(`${chain.label} (${chain.id})`);
+    else missingRecords.push(chain.id);
     continue;
   }
   const record = JSON.parse(readFileSync(file, "utf8"));
@@ -333,6 +354,9 @@ ${hashLines.join("\n")}
 
 console.log(`hashes:    ${hashLines.length} written`);
 console.log(`addresses: ${chainBlocks.length} chains`);
+if (pendingChains.length) {
+  console.log(`pending:   ${pendingChains.join(", ")} -- registered, no deployment record yet`);
+}
 console.log(`abis:      ${abiFiles.length} written`);
 if (skipped.length) {
   console.log(`skipped:   ${skipped.length}`);
