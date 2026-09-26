@@ -114,10 +114,10 @@ is why the source is committed beside it:
 node scripts/chrome/shot.mjs packages/sdk/assets/og.html packages/sdk/assets/og.png 1280 640 2
 ```
 
-It renders at 2x for retina and lands around 790 KB, inside GitHub's 1 MB limit. The
-palette is the product's own `--dark-*` tokens and the mark is the exact viewBox from
-`web/src/components/brand.tsx`, so the card cannot drift from the app by being redrawn
-from memory.
+It renders at 2x for retina and lands around 710 KB, inside GitHub's 1 MB limit. The
+palette and type are the brand kit's (the app's `--dark-*` tokens, Exo 2 and JetBrains
+Mono), and `assets/wordmark.png` is the kit wordmark copied beside the card, so the card
+cannot drift from the app by being redrawn from memory.
 
 `assets/` is not in `files`, so none of this ships in the npm tarball.
 
