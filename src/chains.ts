@@ -114,7 +114,8 @@ export const sepolia = defineChain({
   rpcUrls: {
     default: {
       http: [
-        "https://ethereum-sepolia-rpc.publicnode.com",
+        // publicnode dropped 2026-09-27: it answers `[]` for historical eth_getLogs ranges
+        // that hold logs, so log scans silently miss events.
         "https://0xrpc.io/sep",
         "https://sepolia.rpc.thirdweb.com",
       ],
