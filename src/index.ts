@@ -1,10 +1,10 @@
 /**
  * @peddleswap/sdk -- addresses, ABIs and chain definitions for PeddleSwap.
  *
- * Two deployments ship here: Robinhood Chain mainnet (4663) and Sepolia (11155111).
- * Base (8453) and Anubis Chain (6714) are registered -- their viem definitions ship in
- * `chains` -- but have no addresses until their deploys land; `isSupportedChain` is the
- * gate for that.
+ * Three deployments ship here: Robinhood Chain mainnet (4663), Base (8453) and Sepolia
+ * (11155111). Base has no launchpad (`tokenFactory`): launches there are Latch Protocol's.
+ * Anubis Chain (6714) is registered -- its viem definition ships in `chains` -- but has no
+ * addresses until its deploy lands; `isSupportedChain` is the gate for that.
  *
  * Everything under `./generated` is emitted by `scripts/generate.mjs` from the contracts
  * repo's own build output -- addresses from the deploy broadcast's record, ABIs from solc,

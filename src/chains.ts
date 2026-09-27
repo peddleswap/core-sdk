@@ -120,12 +120,8 @@ export const sepolia = defineChain({
 });
 
 /**
- * Base mainnet (8453) -- REGISTERED, NOT YET DEPLOYED.
- *
- * The definition ships ahead of the contracts so a consumer can already build a client
- * for it, but `addresses` has no 8453 entry and `isSupportedChain(8453)` is false until
- * the deploy writes contracts/deployments/8453.json and the package is regenerated. See
- * `CHAINS` in scripts/generate.mjs for the exact steps.
+ * Base mainnet (8453) -- DEPLOYED 2026-09-27 at block 51852483, without the launchpad
+ * (`tokenFactory`): token launches on Base are Latch Protocol's.
  *
  * viem's own `base` is right apart from its RPC list, which is the single
  * `mainnet.base.org` -- and that endpoint caps `eth_getLogs` at 2,000 blocks. So only
@@ -184,8 +180,8 @@ export const anubis = defineChain({
 /**
  * Every chain this package knows, keyed by id -- deployed or registered.
  *
- * This is a SUPERSET of the chains in `addresses`: Base (8453) and Anubis (6714) are here
- * before their contracts are. Having a viem definition says nothing about whether
+ * This is a SUPERSET of the chains in `addresses`: Anubis (6714) is here before its
+ * contracts are. Having a viem definition says nothing about whether
  * PeddleSwap is deployed there; `isSupportedChain` is the question to ask for that.
  */
 export const chains = {
@@ -223,8 +219,11 @@ export const chains = {
 export const deploymentBlock = {
   4663: 61044184n,
   11155111: 11680694n,
-  // `satisfies` is the reminder: when a regenerate adds a chain to `addresses` (Base,
-  // once deployments/8453.json exists), this stops compiling until its block is added.
+  // The first CREATE in contracts/broadcast/Deploy.s.sol/8453/run-latest.json. The
+  // record's deployBlock (51852483) is the block the script read before broadcasting.
+  8453: 51852486n,
+  // `satisfies` is the reminder: when a regenerate adds a chain to `addresses` (Anubis,
+  // once deployments/6714.json exists), this stops compiling until its block is added.
   // Take it from the broadcast receipts, not blindly from the record's `deployBlock`.
 } as const satisfies Record<SupportedChainId, bigint>;
 

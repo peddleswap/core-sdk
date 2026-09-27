@@ -30,20 +30,29 @@ const UNIVERSAL = [
   "lockerERC20",
   "lockerERC721",
   "feeRouter",
-  "tokenFactory",
   "weth9",
 ] as const;
 
+/** The launchpad, deployed where PeddleSwap runs launches. Base's are Latch Protocol's. */
+const LAUNCHPAD_CHAINS = [4663, 11155111] as const;
+
 describe("addresses", () => {
-  it("ships both chains", () => {
+  it("ships every deployed chain", () => {
     // Numeric comparator, not the default: `sort()` stringifies, and as strings
     // "11155111" sorts before "4663". The same trap `sortTokens` exists to avoid.
-    expect([...chainIds].sort((a, b) => a - b)).toEqual([4663, 11155111]);
+    expect([...chainIds].sort((a, b) => a - b)).toEqual([4663, 8453, 11155111]);
   });
 
   it.each(chainIds)("chain %i has every universal contract", (id) => {
     for (const key of UNIVERSAL) {
       expect(addresses[id], `${id} is missing ${key}`).toHaveProperty(key);
+    }
+  });
+
+  it("has the launchpad exactly where PeddleSwap runs launches", () => {
+    for (const id of chainIds) {
+      const has = "tokenFactory" in addresses[id];
+      expect(has, `${id} tokenFactory`).toBe((LAUNCHPAD_CHAINS as readonly number[]).includes(id));
     }
   });
 
@@ -97,6 +106,7 @@ describe("addresses", () => {
     // so this asserts the direction as well as the value.
     expect(deploymentBlock[11155111]).toBe(11680694n);
     expect(deploymentBlock[4663]).toBe(61044184n);
+    expect(deploymentBlock[8453]).toBe(51852486n);
   });
 
   it("narrows a plain number through isSupportedChain", () => {
@@ -110,7 +120,7 @@ describe("addresses", () => {
     if (isSupportedChain(fromWallet)) {
       expect(addresses[fromWallet].swapRouter02).toMatch(/^0x[0-9a-fA-F]{40}$/);
     }
-    expect([...supportedChainIds].sort((a, b) => a - b)).toEqual([4663, 11155111]);
+    expect([...supportedChainIds].sort((a, b) => a - b)).toEqual([4663, 8453, 11155111]);
   });
 
   it("declares multicall3 so viem can batch", () => {
@@ -123,18 +133,14 @@ describe("addresses", () => {
     expect(chains[11155111].contracts?.multicall3?.address).toBeDefined();
   });
 
-  it("registers Base and Anubis without publishing addresses for them", () => {
-    // Registered, not deployed: the viem definitions ship so a client can be built, but
-    // until contracts/deployments/<id>.json exists and the package is regenerated there
-    // is nothing to call, and isSupportedChain must say so. When Base deploys, 8453 moves
-    // out of this test and into "ships both chains" above.
-    expect(chains[8453].id).toBe(8453);
+  it("registers Anubis without publishing addresses for it", () => {
+    // Registered, not deployed: the viem definition ships so a client can be built, but
+    // until contracts/deployments/6714.json exists and the package is regenerated there
+    // is nothing to call, and isSupportedChain must say so.
     expect(chains[6714].id).toBe(6714);
-    for (const id of [8453, 6714]) {
-      expect(isSupportedChain(id)).toBe(false);
-      expect(Object.keys(addresses).map(Number)).not.toContain(id);
-      expect(chains[id as 8453 | 6714].rpcUrls.default.http.length).toBeGreaterThan(0);
-    }
+    expect(isSupportedChain(6714)).toBe(false);
+    expect(Object.keys(addresses).map(Number)).not.toContain(6714);
+    expect(chains[6714].rpcUrls.default.http.length).toBeGreaterThan(0);
     // Anubis pays gas in DAI, and its Multicall3 is not at the canonical address.
     expect(chains[6714].nativeCurrency.symbol).toBe("DAI");
     expect(chains[6714].contracts?.multicall3?.address).toBe(
