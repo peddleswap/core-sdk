@@ -1,14 +1,35 @@
+<p align="center">
+  <a href="https://peddleswap.xyz"><img src="./assets/og.png" alt="PeddleSwap TypeScript SDK" width="100%"></a>
+</p>
+
 # @peddleswap/sdk
 
-Addresses, ABIs and chain definitions for [PeddleSwap](https://peddleswap.xyz) — a
-Uniswap V2 + V3 exchange with token and LP lockers.
+Addresses, ABIs and chain definitions for [PeddleSwap](https://peddleswap.xyz): swap,
+earn from liquidity, and lock tokens on Robinhood Chain and Base.
 
-Two deployments ship here:
+**[Website](https://peddleswap.xyz)** · **[Docs](https://docs.peddleswap.xyz)** ·
+**[Testnet](https://testnet.peddleswap.xyz)** · **[Brand kit](https://peddleswap.xyz/brand)** ·
+**[Integrate with Claude](./CLAUDE-PROMPT.md)**
 
-| Chain | Id | Deployed at block |
+## What PeddleSwap does
+
+| | What it is | Contracts in this SDK |
 |---|---|---|
-| Robinhood Chain | `4663` | `61044184` |
-| Sepolia | `11155111` | `11680694` |
+| **Swap** | Trade any two tokens at the best price across PeddleSwap's pools | `swapRouter02`, `quoterV2`, `mixedRouteQuoter`, `v2Router` |
+| **Pools** | Uniswap V2 pairs and V3 concentrated-liquidity pools; LPs earn every trade's fee | `v2Factory`, `v3Factory`, `positionManager`, `v3PoolDeployer` |
+| **Dynamic fees** | V3 pools can adjust their fee per swap | `dynamicFeeModule` |
+| **Locker** | Lock tokens or LP positions until a date you choose, with a public proof | `lockerERC20`, `lockerERC721`, `v3FeeAdapter` |
+| **Launchpad** | Create a token, open its market and lock the liquidity in one go (Robinhood Chain) | `tokenFactory` |
+| **Limit orders** | Buy or sell at a price you set (Base) | `limitOrders` |
+| **Fees** | Protocol, referral and creator fees on swaps | `feeRouter` |
+
+## Deployments
+
+| Chain | Id | Deployed at block | Explorer |
+|---|---|---|---|
+| Robinhood Chain | `4663` | `61044184` | [robin.etherscan.io](https://robin.etherscan.io) |
+| Base | `8453` | `51852486` | [basescan.org](https://basescan.org) |
+| Sepolia (testnet) | `11155111` | `11680694` | [sepolia.etherscan.io](https://sepolia.etherscan.io) |
 
 Everything is generated from the contracts repo's own build output — addresses from the
 deploy broadcast's record, ABIs from solc, CREATE2 init code hashes from the deployed
@@ -27,6 +48,13 @@ Protocol's. Anubis Chain (`6714`) is **registered but not yet deployed**: its vi
 definition ships in `chains` (and as `anubis`) so you can build a client for it, but
 `addresses` has no entry and `isSupportedChain(6714)` returns `false` until its contracts
 are live and a new version is published.
+
+## Integrating with Claude
+
+[`CLAUDE-PROMPT.md`](./CLAUDE-PROMPT.md) is a ready-made prompt: paste it into Claude with
+one line describing what you are building, and it integrates PeddleSwap across every
+deployed chain, with the PeddleSwap-specific traps (the V3 pool deployer, per-chain
+contracts, the locker fee) already covered.
 
 ## Quick start
 
@@ -94,7 +122,7 @@ The V3 salt is `abi.encode(token0, token1, fee)` — padded, 96 bytes. The V2 sa
 
 ## Fee tiers
 
-All four are enabled on both chains, verified against the live factory:
+All four are enabled on every chain, verified against the live factories:
 
 | Fee | Tier | Tick spacing |
 |---|---|---|
@@ -109,12 +137,14 @@ import { FEE_TIERS, tickSpacings } from "@peddleswap/sdk";
 
 ## Contracts that exist on one chain and not the other
 
-The two deployments are not identical, and the address map is typed per chain to match.
-Limit orders and the launchpad fee splitter are on Sepolia only:
+The deployments are not identical, and the address map is typed per chain to match.
+Limit orders are on Base and Sepolia; the launchpad (`tokenFactory`) is on Robinhood Chain
+and Sepolia; the launchpad fee splitter is on Sepolia only:
 
 ```ts
-addresses[11155111].limitOrders; // fine
-addresses[4663].limitOrders;     // compile error — not deployed there
+addresses[8453].limitOrders;  // fine
+addresses[4663].limitOrders;  // compile error — not deployed there
+addresses[8453].tokenFactory; // compile error — Base launches are Latch Protocol's
 ```
 
 That is deliberate. A flat `Record<string, Address>` would let the second line compile and
@@ -127,7 +157,7 @@ exactly what `useChainId()` and every wallet event give you. Narrow it rather th
 ```ts
 import { addresses, isSupportedChain } from "@peddleswap/sdk";
 
-if (!isSupportedChain(chainId)) return null;   // chainId is now 4663 | 11155111
+if (!isSupportedChain(chainId)) return null;   // chainId is now 4663 | 8453 | 11155111
 const router = addresses[chainId].swapRouter02;
 ```
 
@@ -175,7 +205,7 @@ is in measured order, not alphabetical.
   `feeRouterAbi`, `tokenFactoryAbi`, `tokenDescriptorAbi`, `v3FeeAdapterAbi`,
   `limitOrdersAbi`, `launchpadFeeAbi`, `weth9Abi`
 
-Reads batch through Multicall3 on both chains — the chain objects declare it, so viem
+Reads batch through Multicall3 on every chain — the chain objects declare it, so viem
 folds a page of pool reads into one round trip without any setup.
 
 ## Verification
@@ -185,13 +215,12 @@ All 20 mainnet contracts are verified on Sourcify:
 
 ## Where this code lives
 
-This package is developed in the [PeddleSwap monorepo](https://github.com/peddles-markets/peddleswap)
-at `packages/sdk`, and mirrored to
-[`peddles-markets/peddleswap-sdk`](https://github.com/peddles-markets/peddleswap-sdk).
+This package is developed in the PeddleSwap monorepo (private) at `packages/sdk`, and
+published here, in [`peddleswap/core-sdk`](https://github.com/peddleswap/core-sdk).
 
-**If you are reading this in `peddleswap-sdk`, that is the mirror.** It is a read-only
+**If you are reading this in `core-sdk`, that is the mirror.** It is a read-only
 projection, force-pushed on every change, so a commit made directly here is destroyed by
-the next sync. Issues are welcome; pull requests should go to the monorepo, where
+the next sync. Issues are welcome here; changes are made in the monorepo, where
 `packages/sdk` sits next to the contracts it is generated from.
 
 The split exists because of that generation. Addresses and ABIs are derived from
@@ -235,7 +264,7 @@ rather than failing the build. Once the deploy has written that record:
    you do (`satisfies Record<SupportedChainId, bigint>`). Take the block of the earliest
    CREATE from `contracts/broadcast/Deploy.s.sol/<id>/`, not blindly the record's
    `deployBlock` — see the Sepolia note there for why the two can differ.
-3. Update the chain lists asserted in `src/addresses.test.ts` ("ships both chains", the
+3. Update the chain lists asserted in `src/addresses.test.ts` ("ships every deployed chain", the
    `supportedChainIds` expectation, and the "registers Anubis" test), then `npm test`.
 4. `npm run verify:live -- <id>` against the live chain, and `npm run gen:check`.
 5. Remove `pending: true` for that chain in `scripts/generate.mjs`, so a record that later

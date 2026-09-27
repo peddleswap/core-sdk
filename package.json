@@ -1,16 +1,15 @@
 {
   "name": "@peddleswap/sdk",
   "version": "0.1.0",
-  "description": "Addresses, ABIs and chain definitions for PeddleSwap on Robinhood Chain and Sepolia, generated from the deployed contracts.",
+  "description": "Addresses, ABIs and chain definitions for PeddleSwap on Robinhood Chain, Base and Sepolia, generated from the deployed contracts.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/peddles-markets/peddleswap.git",
-    "directory": "packages/sdk"
+    "url": "git+https://github.com/peddleswap/core-sdk.git"
   },
-  "homepage": "https://github.com/peddles-markets/peddleswap/tree/main/packages/sdk#readme",
+  "homepage": "https://github.com/peddleswap/core-sdk#readme",
   "bugs": {
-    "url": "https://github.com/peddles-markets/peddleswap/issues"
+    "url": "https://github.com/peddleswap/core-sdk/issues"
   },
   "type": "module",
   "sideEffects": false,
@@ -20,7 +19,8 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CLAUDE-PROMPT.md"
   ],
   "exports": {
     ".": {

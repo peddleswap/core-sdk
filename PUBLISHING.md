@@ -5,7 +5,7 @@ Two destinations, one source of truth.
 | | Where | What it is |
 |---|---|---|
 | **Package** | [`npmjs.com/package/@peddleswap/sdk`](https://www.npmjs.com/package/@peddleswap/sdk) | What developers install |
-| **Mirror** | `github.com/peddles-markets/peddleswap-sdk` | Readable, clonable source + issues |
+| **Mirror** | `github.com/peddleswap/core-sdk` | Readable, clonable source + issues |
 | **Source of truth** | `peddles-markets/peddleswap` → `packages/sdk` | Where edits happen |
 
 The monorepo has to stay the source of truth: this package's addresses and ABIs are
@@ -43,9 +43,9 @@ default to private and npm rejects a private publish without a paid plan.
 
 ```sh
 gh auth login
-gh repo create peddles-markets/peddleswap-sdk \
+gh repo create peddleswap/core-sdk \
   --public \
-  --description "TypeScript SDK for PeddleSwap — addresses, ABIs, chain definitions and CREATE2 pool derivation for Robinhood Chain (4663) and Sepolia. Generated from the deployed contracts."
+  --description "TypeScript SDK for PeddleSwap — addresses, ABIs, chain definitions and CREATE2 pool derivation for Robinhood Chain (4663), Base (8453) and Sepolia. Generated from the deployed contracts."
 ```
 
 Create it **empty** — no README, no license, no .gitignore. The first sync force-pushes a
@@ -65,7 +65,7 @@ Verify the mirror stands on its own — this is worth doing once, because it is 
 premise of having a mirror:
 
 ```sh
-git clone https://github.com/peddles-markets/peddleswap-sdk /tmp/sdk-check
+git clone https://github.com/peddleswap/core-sdk /tmp/sdk-check
 cd /tmp/sdk-check && npm install && npx tsc --noEmit && npx vitest run
 ```
 
@@ -79,11 +79,11 @@ rather than passed, because a green result for a check that did not happen is a 
 
 ```
 TypeScript SDK for PeddleSwap — addresses, ABIs, chain definitions and CREATE2 pool
-derivation for Robinhood Chain (4663) and Sepolia. Generated from the deployed contracts.
+derivation for Robinhood Chain (4663), Base (8453) and Sepolia. Generated from the deployed contracts.
 ```
 
 ```sh
-gh repo edit peddles-markets/peddleswap-sdk   --description "TypeScript SDK for PeddleSwap — addresses, ABIs, chain definitions and CREATE2 pool derivation for Robinhood Chain (4663) and Sepolia. Generated from the deployed contracts."   --homepage "https://www.npmjs.com/package/@peddleswap/sdk"
+gh repo edit peddleswap/core-sdk   --description "TypeScript SDK for PeddleSwap — addresses, ABIs, chain definitions and CREATE2 pool derivation for Robinhood Chain (4663), Base (8453) and Sepolia. Generated from the deployed contracts."   --homepage "https://www.npmjs.com/package/@peddleswap/sdk"
 ```
 
 The shorter line in `package.json` is what npm's search results show, and it is deliberately
@@ -93,7 +93,7 @@ detail rather than having them cut mid-word.
 **Topics**, which are how anyone finds this on GitHub:
 
 ```sh
-gh repo edit peddles-markets/peddleswap-sdk --add-topic   peddleswap,robinhood-chain,dex,amm,uniswap,uniswap-v3,viem,ethereum,web3,defi,typescript,abi
+gh repo edit peddleswap/core-sdk --add-topic   peddleswap,robinhood-chain,dex,amm,uniswap,uniswap-v3,viem,ethereum,web3,defi,typescript,abi
 ```
 
 Same twelve as the `keywords` in `package.json`, on purpose — one list to update, and the
@@ -127,7 +127,7 @@ Two repository secrets on the **monorepo** (Settings → Secrets and variables �
 
 | Secret | What | How |
 |---|---|---|
-| `MIRROR_TOKEN` | Lets CI push to the mirror | Fine-grained PAT, **Contents: write** on `peddleswap-sdk` only |
+| `MIRROR_TOKEN` | Lets CI push to the mirror | Fine-grained PAT, **Contents: write** on `core-sdk` only |
 | `NPM_TOKEN` | Lets CI publish | npm **Automation** token |
 
 Both of these have a trap in them:
@@ -228,7 +228,7 @@ mirror commit that is not in the split output is one that exists nowhere else.
 # in the monorepo
 SPLIT=$(git subtree split --prefix=packages/sdk HEAD | tail -1)
 
-git clone https://github.com/peddles-markets/peddleswap-sdk /tmp/rescue
+git clone https://github.com/peddleswap/core-sdk /tmp/rescue
 cd /tmp/rescue
 git fetch ../path/to/peddleswap "$SPLIT"
 git log --oneline FETCH_HEAD..origin/main     # commits only the mirror has

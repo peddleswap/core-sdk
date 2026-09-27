@@ -50,8 +50,11 @@ export const robinhood = defineChain({
       ],
     },
   },
+  // Etherscan is Robinhood Chain's official explorer (Etherscan's own chain list: 4663,
+  // robin.etherscan.io). Blockscout also indexes the chain and stays listed.
   blockExplorers: {
-    default: { name: "Blockscout", url: "https://robinhoodchain.blockscout.com" },
+    default: { name: "Etherscan", url: "https://robin.etherscan.io", apiUrl: "https://api.etherscan.io/v2/api?chainid=4663" },
+    blockscout: { name: "Blockscout", url: "https://robinhoodchain.blockscout.com" },
   },
   contracts: {
     /**
