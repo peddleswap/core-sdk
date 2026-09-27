@@ -127,14 +127,14 @@ Two repository secrets on the **monorepo** (Settings → Secrets and variables �
 
 | Secret | What | How |
 |---|---|---|
-| `MIRROR_DEPLOY_KEY` | Lets CI push to the mirror | Private half of an SSH deploy key with write access on `core-sdk` only (set 2026-09-27) |
+| `MIRROR_TOKEN` | Lets CI push to the mirror | Fine-grained PAT, **Contents: read and write** on `core-sdk` only |
 | `NPM_TOKEN` | Lets CI publish | npm **Automation** token |
 
 Both of these have a trap in them:
 
 - The default `GITHUB_TOKEN` is scoped to the repository the workflow runs in and **cannot
-  push to another repo**. That is why the mirror needs its own credential. A deploy key opens
-  exactly one repo and belongs to nobody's account, which is narrower than any personal token.
+  push to another repo**. That is why `MIRROR_TOKEN` exists at all. Scope it to `core-sdk` and
+  Contents only. (A deploy key would be narrower, but the org has deploy keys switched off.)
 - npm has two token types that both look right. A **Publish** token still demands 2FA and
   will hang a CI run until it times out. Use **Automation**, which is exempt. Create it at
   <https://www.npmjs.com/settings/~/tokens> → Generate New Token → Classic → Automation.
