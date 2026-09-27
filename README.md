@@ -21,11 +21,12 @@ npm install @peddleswap/sdk viem
 
 `viem` is a peer dependency; bring your own so you don't end up with two copies.
 
-Two more chains are **registered but not yet deployed**: Base (`8453`) and Anubis Chain
-(`6714`). Their viem definitions ship in `chains` (and as `base` / `anubis`) so you can
-build a client for them, but `addresses` has no entry for either and
-`isSupportedChain(8453)` returns `false` until the contracts are live and a new version is
-published.
+Three chains ship addresses: Robinhood Chain (`4663`), Base (`8453`) and Sepolia
+(`11155111`). Base has no launchpad (`tokenFactory`): token launches on Base are Latch
+Protocol's. Anubis Chain (`6714`) is **registered but not yet deployed**: its viem
+definition ships in `chains` (and as `anubis`) so you can build a client for it, but
+`addresses` has no entry and `isSupportedChain(6714)` returns `false` until its contracts
+are live and a new version is published.
 
 ## Quick start
 
@@ -160,7 +161,7 @@ is in measured order, not alphabetical.
 
 - `addresses`, `SupportedChainId`, `AddressesFor` — per-chain, typed
 - `chains`, `robinhood`, `sepolia`, `base`, `anubis`, `deploymentBlock` — viem chain
-  definitions (`chains` also carries the registered-but-undeployed Base and Anubis)
+  definitions (`chains` also carries the registered-but-undeployed Anubis)
 - `supportedChainIds`, `isSupportedChain` — narrowing a plain `number`
 - `computeV3PoolAddress`, `computeV2PairAddress`, `sortTokens` — CREATE2 derivation
 - `FEE_TIERS`, `tickSpacings`, `FeeAmount`
@@ -224,8 +225,8 @@ Release and mirroring instructions are in [PUBLISHING.md](./PUBLISHING.md).
 
 ### Adding a chain after its deploy
 
-Base (`8453`) and Anubis (`6714`) are listed in `CHAINS` in `scripts/generate.mjs` with
-`pending: true`: a missing `contracts/deployments/<id>.json` is skipped with a notice
+Anubis (`6714`) is listed in `CHAINS` in `scripts/generate.mjs` with `pending: true`
+(Base went through these steps on 2026-09-27): a missing `contracts/deployments/<id>.json` is skipped with a notice
 rather than failing the build. Once the deploy has written that record:
 
 1. `npm run gen` — the chain appears in `src/generated/addresses.ts` on its own, and
@@ -235,8 +236,7 @@ rather than failing the build. Once the deploy has written that record:
    CREATE from `contracts/broadcast/Deploy.s.sol/<id>/`, not blindly the record's
    `deployBlock` — see the Sepolia note there for why the two can differ.
 3. Update the chain lists asserted in `src/addresses.test.ts` ("ships both chains", the
-   `supportedChainIds` expectation, and remove the id from the "registers Base and
-   Anubis" test), then `npm test`.
+   `supportedChainIds` expectation, and the "registers Anubis" test), then `npm test`.
 4. `npm run verify:live -- <id>` against the live chain, and `npm run gen:check`.
 5. Remove `pending: true` for that chain in `scripts/generate.mjs`, so a record that later
    goes missing fails the build instead of silently dropping the chain.

@@ -99,7 +99,8 @@ if (!existsSync(ARTIFACTS)) {
 const CHAINS = [
   { id: 4663, key: "robinhood", label: "Robinhood Chain" },
   { id: 11155111, key: "sepolia", label: "Sepolia" },
-  { id: 8453, key: "base", label: "Base", pending: true },
+  // Deployed 2026-09-27: a missing record now fails the build.
+  { id: 8453, key: "base", label: "Base" },
   { id: 6714, key: "anubis", label: "Anubis Chain", pending: true },
 ];
 
