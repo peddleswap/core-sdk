@@ -1,27 +1,65 @@
+<a href="https://peddleswap.xyz">
+  <img src="https://raw.githubusercontent.com/peddleswap/core-sdk/main/assets/og.png" alt="PeddleSwap TypeScript SDK" width="100%" />
+</a>
+
+<h3 align="center">Swap. Earn. Lock.</h3>
+
 <p align="center">
-  <a href="https://peddleswap.xyz"><img src="./assets/og.png" alt="PeddleSwap TypeScript SDK" width="100%"></a>
+  The official TypeScript SDK for <a href="https://peddleswap.xyz">PeddleSwap</a>: every address, ABI and chain definition you need to build on it.<br/>
+  Live on <b>Robinhood Chain</b> and <b>Base</b>.
 </p>
 
-# @peddleswap/sdk
+<p align="center">
+  <a href="https://peddleswap.xyz"><b>Open the app</b></a> ·
+  <a href="https://docs.peddleswap.xyz">Docs</a> ·
+  <a href="https://docs.peddleswap.xyz/contracts">Contracts</a> ·
+  <a href="https://testnet.peddleswap.xyz">Testnet</a> ·
+  <a href="https://peddleswap.xyz/brand">Brand kit</a> ·
+  <a href="https://github.com/peddleswap/core-sdk/blob/main/CLAUDE-PROMPT.md">Integrate with Claude</a>
+</p>
 
-Addresses, ABIs and chain definitions for [PeddleSwap](https://peddleswap.xyz): swap,
-earn from liquidity, and lock tokens on Robinhood Chain and Base.
+<p align="center">
+  <a href="https://www.npmjs.com/package/@peddleswap/sdk"><img alt="npm" src="https://img.shields.io/npm/v/@peddleswap/sdk?style=flat-square&labelColor=000000&color=c4f44a&label=npm" /></a>
+  <a href="https://docs.peddleswap.xyz/robinhood-chain"><img alt="Live on Robinhood Chain" src="https://img.shields.io/badge/live-Robinhood%20Chain-c4f44a?style=flat-square&labelColor=000000" /></a>
+  <a href="https://docs.peddleswap.xyz/base"><img alt="Live on Base" src="https://img.shields.io/badge/live-Base-c4f44a?style=flat-square&labelColor=000000" /></a>
+  <a href="https://docs.peddleswap.xyz/contracts"><img alt="Contracts verified" src="https://img.shields.io/badge/contracts-verified-c4f44a?style=flat-square&labelColor=000000" /></a>
+  <a href="https://github.com/peddleswap/core-sdk/blob/main/LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-c4f44a?style=flat-square&labelColor=000000" /></a>
+</p>
 
-**[Website](https://peddleswap.xyz)** · **[Docs](https://docs.peddleswap.xyz)** ·
-**[Testnet](https://testnet.peddleswap.xyz)** · **[Brand kit](https://peddleswap.xyz/brand)** ·
-**[Integrate with Claude](./CLAUDE-PROMPT.md)**
+---
 
-## What PeddleSwap does
+```sh
+npm install @peddleswap/sdk viem
+```
 
-| | What it is | Contracts in this SDK |
-|---|---|---|
-| **Swap** | Trade any two tokens at the best price across PeddleSwap's pools | `swapRouter02`, `quoterV2`, `mixedRouteQuoter`, `v2Router` |
-| **Pools** | Uniswap V2 pairs and V3 concentrated-liquidity pools; LPs earn every trade's fee | `v2Factory`, `v3Factory`, `positionManager`, `v3PoolDeployer` |
-| **Dynamic fees** | V3 pools can adjust their fee per swap | `dynamicFeeModule` |
-| **Locker** | Lock tokens or LP positions until a date you choose, with a public proof | `lockerERC20`, `lockerERC721`, `v3FeeAdapter` |
-| **Launchpad** | Create a token, open its market and lock the liquidity in one go (Robinhood Chain) | `tokenFactory` |
-| **Limit orders** | Buy or sell at a price you set (Base) | `limitOrders` |
-| **Fees** | Protocol, referral and creator fees on swaps | `feeRouter` |
+## What you can build
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3><a href="https://peddleswap.xyz/swap">Swap</a></h3>
+      Quote and route trades across every V2 and V3 pool.<br/>
+      <code>swapRouter02</code> · <code>quoterV2</code> · <code>mixedRouteQuoter</code> · <code>v2Router</code>
+    </td>
+    <td width="50%" valign="top">
+      <h3><a href="https://peddleswap.xyz/pools">Pools</a></h3>
+      V2 pairs and V3 concentrated liquidity, with dynamic fees on V3.<br/>
+      <code>v2Factory</code> · <code>v3Factory</code> · <code>positionManager</code> · <code>dynamicFeeModule</code>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3><a href="https://peddleswap.xyz/locker">Locker</a></h3>
+      Lock tokens, LP tokens or V3 positions until a date, with a public proof.<br/>
+      <code>lockerERC20</code> · <code>lockerERC721</code> · <code>v3FeeAdapter</code>
+    </td>
+    <td width="50%" valign="top">
+      <h3>Launchpad, limit orders and fees</h3>
+      Token launches on Robinhood Chain, limit orders on Base, and swap fee routing.<br/>
+      <code>tokenFactory</code> · <code>limitOrders</code> · <code>feeRouter</code>
+    </td>
+  </tr>
+</table>
 
 ## Deployments
 
@@ -51,7 +89,7 @@ are live and a new version is published.
 
 ## Integrating with Claude
 
-[`CLAUDE-PROMPT.md`](./CLAUDE-PROMPT.md) is a ready-made prompt: paste it into Claude with
+[`CLAUDE-PROMPT.md`](https://github.com/peddleswap/core-sdk/blob/main/CLAUDE-PROMPT.md) is a ready-made prompt: paste it into Claude with
 one line describing what you are building, and it integrates PeddleSwap across every
 deployed chain, with the PeddleSwap-specific traps (the V3 pool deployer, per-chain
 contracts, the locker fee) already covered.
@@ -250,7 +288,7 @@ the two skips being the init-code-hash comparisons that have no Solidity to read
 skipped rather than passed, because a green result for a check that did not happen would
 be a lie.
 
-Release and mirroring instructions are in [PUBLISHING.md](./PUBLISHING.md).
+Release and mirroring instructions are in [PUBLISHING.md](https://github.com/peddleswap/core-sdk/blob/main/PUBLISHING.md).
 
 ### Adding a chain after its deploy
 
