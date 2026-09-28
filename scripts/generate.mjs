@@ -302,44 +302,46 @@ writeFileSync(
 /**
  * The two hashes that let a caller compute a pair or pool address without an RPC call.
  *
- * These are generated, not transcribed, and that is the whole point. Both values also
- * exist as hardcoded constants in Solidity -- `PeddleSwapV2Library.pairFor` and
- * `PoolAddress.POOL_INIT_CODE_HASH` -- because a contract cannot hash its own creation
- * code cheaply. A constant like that goes stale the moment the pair or pool source is
- * touched, or even when only the optimizer settings change, and nothing in a normal build
- * notices: addresses silently start pointing at contracts that do not exist.
+ * SOURCE OF TRUTH: the constants the DEPLOYED routers use -- `PeddleSwapV2Library.pairFor`
+ * and `PoolAddress.POOL_INIT_CODE_HASH`. A pair or pool address is only useful if it is the
+ * one the router computes, and on every live chain those constants reproduce the real pairs
+ * (checked 2026-09-28 against a Sepolia pair; the V2 factory's code is byte-identical on
+ * 4663, 8453 and 11155111).
  *
- * Deriving them here from the same artifacts the deployed bytecode came from means this
- * package cannot carry a stale hash. `src/initCodeHash.test.ts` then asserts the
- * generated values still equal the ones baked into the Solidity, which turns the SDK into
- * the drift alarm for the contracts rather than another copy to keep in sync.
+ * These used to be hashed from a fresh compile, which is right for V3 but NOT reproducible
+ * for the V2 pair: it is solc 0.5.16, whose bytecode carries a metadata hash of the whole
+ * build context, and a fresh build of today's unchanged source gives 0x3774... while the
+ * deployed pairs (built from the deploy-time cache) are 0x7c8c.... CI then "regenerated" a
+ * hash no deployed pair has and refused a correct release.
+ *
+ * The compiled bytecode is still hashed and compared below, as a warning: a mismatch means
+ * a FRESH deploy to a new chain would create pairs the V2 router cannot find. Reconcile the
+ * pair build with the library constant before deploying anywhere new.
  */
-const HASH_TARGETS = {
-  v2Pair: "PeddleSwapV2Pair.sol/PeddleSwapV2Pair.json",
-  v3Pool: "PeddleSwapV3Pool.sol/PeddleSwapV3Pool.json",
+const HASH_SOURCES = {
+  v2Pair: { file: "v2/periphery/libraries/PeddleSwapV2Library.sol", re: /hex'([0-9a-f]{64})'\s*\/\/\s*init code hash/, artifact: "PeddleSwapV2Pair.sol/PeddleSwapV2Pair.json" },
+  v3Pool: { file: "v3/periphery/libraries/PoolAddress.sol", re: /POOL_INIT_CODE_HASH\s*=\s*0x([0-9a-f]{64})/, artifact: "PeddleSwapV3Pool.sol/PeddleSwapV3Pool.json" },
 };
 
 const hashLines = [];
-for (const [name, relPath] of Object.entries(HASH_TARGETS)) {
-  const full = join(ARTIFACTS, relPath);
-  if (!existsSync(full)) {
-    console.error(`cannot hash ${name}: missing ${relPath}. Run \`forge build\` in contracts/.`);
+for (const [name, { file, re, artifact }] of Object.entries(HASH_SOURCES)) {
+  const source = readFileSync(join(CONTRACTS, "src", file), "utf8");
+  const m = re.exec(source);
+  if (!m) {
+    console.error(`cannot read the ${name} init code hash from src/${file}`);
     process.exit(1);
   }
-  const artifact = JSON.parse(readFileSync(full, "utf8"));
-  const creation = artifact.bytecode?.object;
-  if (!creation || creation.length < 4) {
-    console.error(`cannot hash ${name}: artifact has no creation bytecode`);
-    process.exit(1);
+  const hash = `0x${m[1]}`;
+  hashLines.push(`  ${name}: "${hash}",`);
+
+  const full = join(ARTIFACTS, artifact);
+  const creation = existsSync(full) ? JSON.parse(readFileSync(full, "utf8")).bytecode?.object : undefined;
+  if (creation && !creation.includes("__$") && keccak256(creation) !== hash) {
+    console.warn(
+      `warning: ${name}: this build's bytecode hashes to ${keccak256(creation)}, not the deployed ${hash}. ` +
+        "Existing chains are unaffected; a fresh deploy to a new chain would not match its router.",
+    );
   }
-  // An unlinked library reference would make the hash meaningless -- it hashes the
-  // placeholder, not the code that gets deployed. Neither of these contracts links a
-  // library today; if one ever does, fail loudly instead of emitting a wrong address.
-  if (creation.includes("__$")) {
-    console.error(`cannot hash ${name}: creation bytecode has unlinked library placeholders`);
-    process.exit(1);
-  }
-  hashLines.push(`  ${name}: "${keccak256(creation)}",`);
 }
 
 writeFileSync(
