@@ -54,9 +54,10 @@ npm install @peddleswap/sdk viem
       <code>lockerERC20</code> · <code>lockerERC721</code> · <code>v3FeeAdapter</code>
     </td>
     <td width="50%" valign="top">
-      <h3>Launchpad, limit orders and fees</h3>
-      Token launches on Robinhood Chain, limit orders on Base, and swap fee routing.<br/>
-      <code>tokenFactory</code> · <code>limitOrders</code> · <code>feeRouter</code>
+      <h3>Limit orders and fees</h3>
+      Limit orders on Base and swap fee routing. New token launches run on
+      <a href="https://github.com/Latch-Protocol-Team/latch-sdk">Latch Protocol</a>; <code>tokenFactory</code> is PeddleSwap's earlier, retired launchpad.<br/>
+      <code>limitOrders</code> · <code>feeRouter</code>
     </td>
   </tr>
 </table>
@@ -81,8 +82,8 @@ npm install @peddleswap/sdk viem
 `viem` is a peer dependency; bring your own so you don't end up with two copies.
 
 Three chains ship addresses: Robinhood Chain (`4663`), Base (`8453`) and Sepolia
-(`11155111`). Base has no launchpad (`tokenFactory`): token launches on Base are Latch
-Protocol's. Anubis Chain (`6714`) is **registered but not yet deployed**: its viem
+(`11155111`). `tokenFactory` (Robinhood Chain and Sepolia only) is PeddleSwap's earlier launchpad and is
+retired: token launches now run on Latch Protocol. Anubis Chain (`6714`) is **registered but not yet deployed**: its viem
 definition ships in `chains` (and as `anubis`) so you can build a client for it, but
 `addresses` has no entry and `isSupportedChain(6714)` returns `false` until its contracts
 are live and a new version is published.

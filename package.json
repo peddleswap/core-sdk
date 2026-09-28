@@ -1,6 +1,6 @@
 {
   "name": "@peddleswap/sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Addresses, ABIs and chain definitions for PeddleSwap on Robinhood Chain, Base and Sepolia, generated from the deployed contracts.",
   "license": "MIT",
   "repository": {
