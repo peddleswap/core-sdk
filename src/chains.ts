@@ -125,7 +125,8 @@ export const sepolia = defineChain({
 
 /**
  * Base mainnet (8453) -- DEPLOYED 2026-09-27 at block 51852483, without the launchpad
- * (`tokenFactory`): token launches on Base are Latch Protocol's.
+ * (`tokenFactory`): token launches on Base run on the Peddles launch contracts
+ * (`@peddles/sdk`), which this package does not cover.
  *
  * viem's own `base` is right apart from its RPC list, which is the single
  * `mainnet.base.org` -- and that endpoint caps `eth_getLogs` at 2,000 blocks. So only
@@ -150,6 +151,47 @@ export const base = defineChain({
       ],
     },
   },
+});
+
+/**
+ * Arc mainnet (5042) -- DEPLOYED 2026-10-02, without the launchpad (`tokenFactory`).
+ *
+ * THE COIN IS USDC, IN TWO PRECISIONS
+ *
+ * Gas is paid in native USDC with 18 decimals. The same balance is also the ERC-20 at
+ * 0x3600000000000000000000000000000000000000, where it has 6: one account read 5.090075
+ * both ways on 2026-10-02. Trade and quote the ERC-20 like any other token, and never mix
+ * the two precisions. PeddleSwap's app does exactly that: every route on Arc is
+ * token-to-token.
+ *
+ * `addresses[5042].weth9` is PeddleSwap's own `WrappedNative` ("Wrapped USDC", WUSDC, 18
+ * decimals), not a chain-provided contract: Arc's contract list says there is no wrapped
+ * USDC, and the routers need a wrapped native as a constructor argument. It has WETH9's
+ * functions and events (`weth9Abi` decodes it); its reverts are custom errors.
+ *
+ * Both endpoints answered `eth_chainId` with 5042 on 2026-10-02 and were used to verify
+ * the deployment. `rpc.mainnet.arc.io` is the official one and rate-limits a burst.
+ * `eth_getLogs` ranges are capped well below what Base and Robinhood Chain serve; page in
+ * small ranges. Multicall3 is at the canonical address (code present, `getBlockNumber()`
+ * answers).
+ */
+export const arc = defineChain({
+  id: 5042,
+  name: "Arc",
+  nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
+  rpcUrls: {
+    default: {
+      http: ["https://rpc.mainnet.arc.io", "https://arc-rpc.publicnode.com"],
+    },
+  },
+  blockExplorers: {
+    default: { name: "Arc Explorer", url: "https://explorer.arc.io" },
+    etherscan: { name: "Etherscan", url: "https://arc.etherscan.io" },
+  },
+  contracts: {
+    multicall3: { address: "0xcA11bde05977b3631167028862bE2a173976CA11" },
+  },
+  testnet: false,
 });
 
 /**
@@ -192,6 +234,7 @@ export const chains = {
   4663: robinhood,
   11155111: sepolia,
   8453: base,
+  5042: arc,
   6714: anubis,
 } as const;
 
@@ -226,6 +269,9 @@ export const deploymentBlock = {
   // The first CREATE in contracts/broadcast/Deploy.s.sol/8453/run-latest.json. The
   // record's deployBlock (51852483) is the block the script read before broadcasting.
   8453: 51852486n,
+  // The first CREATE in contracts/broadcast/Deploy.s.sol/5042/run-latest.json (the record's
+  // deployBlock is 23924352). The wrapped native was deployed separately, at 23924175.
+  5042: 23924361n,
   // `satisfies` is the reminder: when a regenerate adds a chain to `addresses` (Anubis,
   // once deployments/6714.json exists), this stops compiling until its block is added.
   // Take it from the broadcast receipts, not blindly from the record's `deployBlock`.

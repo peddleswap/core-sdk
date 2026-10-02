@@ -101,6 +101,10 @@ const CHAINS = [
   { id: 11155111, key: "sepolia", label: "Sepolia" },
   // Deployed 2026-09-27: a missing record now fails the build.
   { id: 8453, key: "base", label: "Base" },
+  // Deployed 2026-10-02 (contracts/ARC-DEPLOY.md). `weth9` there is PeddleSwap's own
+  // WrappedNative ("Wrapped USDC"): Arc's coin is USDC and the chain ships no wrapper. It
+  // has WETH9's functions and events, so the WETH9 ABI below decodes it.
+  { id: 5042, key: "arc", label: "Arc" },
   { id: 6714, key: "anubis", label: "Anubis Chain", pending: true },
 ];
 

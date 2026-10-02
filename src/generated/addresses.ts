@@ -86,6 +86,30 @@ export const addresses = {
     v3PoolDeployer: "0xFc0bd2e4e1E1d80749Df8865850025E419Fe37Fe",
     weth9: "0x4200000000000000000000000000000000000006",
   },
+  /** Arc (5042) — deployed at block 23924352. */
+  5042: {
+    dynamicFeeModule: "0x7F5fb39ED1f1B150faef55d3868DA142FDaA0A4d",
+    feeRouter: "0x7E3dDb385ce7c0492f34b3f2D2eFe6E698486B75",
+    interfaceMulticall: "0xd8a99B32aCad8c1ddC709E29992cbC19dF34286D",
+    limitOrders: "0x333aD94e8B6FD2C0980681253D6EEc14d0884128",
+    lockerERC20: "0x9Dc72C10F210e4C842d086Dc7A153887f6709FE3",
+    lockerERC721: "0x3ca4C9F740003bCd7fEbF5d4C7c2956E5860D803",
+    mixedRouteQuoter: "0x8785Da212D634Da92efA6FA5E4a3e5097ebe56C4",
+    positionManager: "0x897B8d7a4E461F0713Fa6CD0cC9412985a7f0305",
+    quoter: "0x04C144cab58b4aa08A005ff90F5Bb28F798FB89E",
+    quoterV2: "0xAda1611232F3369bacba40447Ba5eD853D3597F1",
+    swapRouter: "0x2077810Ccd04C7bb6cae66462DdBa8Bc1AE72f33",
+    swapRouter02: "0xb142dD5163beBc9F4125c4abBfb97f9358973612",
+    tickLens: "0x2e03623c495f3912f294bF7cC1598af1110FA28C",
+    tokenDescriptor: "0xD5F79bA1D2c6441477A8b5b9dC595E8Fb5B6d96d",
+    tokenValidator: "0xe29fe05A54796F0301D7395f98A45DD1fa3025Cf",
+    v2Factory: "0x4dcBA0BD291e68D9A3A64A8900C4A67Cd1B149d3",
+    v2Router: "0xacDDF4543b0c99e33a851febef0bDdae7E470B24",
+    v3Factory: "0x94C0883ec4A24BD69610bdD408Fd8263119827A2",
+    v3FeeAdapter: "0x21Fc5C7AA794C5E6e2D09fa1aB0C22009aD8a992",
+    v3PoolDeployer: "0x37bc0bd4250c334d12D9163c6c499bcB26C138A9",
+    weth9: "0x0482B678A56c65Bb96Aa82576d8B50a178a35613",
+  },
 } as const satisfies Record<number, Record<string, Address>>;
 
 /** Chain ids this package ships addresses for. */

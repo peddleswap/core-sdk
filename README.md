@@ -6,7 +6,7 @@
 
 <p align="center">
   The official TypeScript SDK for <a href="https://peddleswap.xyz">PeddleSwap</a>: every address, ABI and chain definition you need to build on it.<br/>
-  Live on <b>Robinhood Chain</b> and <b>Base</b>.
+  Live on <b>Robinhood Chain</b>, <b>Base</b> and <b>Arc</b>.
 </p>
 
 <p align="center">
@@ -22,6 +22,7 @@
   <a href="https://www.npmjs.com/package/@peddleswap/sdk"><img alt="npm" src="https://img.shields.io/npm/v/@peddleswap/sdk?style=flat-square&labelColor=000000&color=c4f44a&label=npm" /></a>
   <a href="https://docs.peddleswap.xyz/robinhood-chain"><img alt="Live on Robinhood Chain" src="https://img.shields.io/badge/live-Robinhood%20Chain-c4f44a?style=flat-square&labelColor=000000" /></a>
   <a href="https://docs.peddleswap.xyz/base"><img alt="Live on Base" src="https://img.shields.io/badge/live-Base-c4f44a?style=flat-square&labelColor=000000" /></a>
+  <a href="https://docs.peddleswap.xyz/arc"><img alt="Live on Arc" src="https://img.shields.io/badge/live-Arc-c4f44a?style=flat-square&labelColor=000000" /></a>
   <a href="https://docs.peddleswap.xyz/contracts"><img alt="Contracts verified" src="https://img.shields.io/badge/contracts-verified-c4f44a?style=flat-square&labelColor=000000" /></a>
   <a href="https://github.com/peddleswap/core-sdk/blob/main/LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-c4f44a?style=flat-square&labelColor=000000" /></a>
 </p>
@@ -55,8 +56,8 @@ npm install @peddleswap/sdk viem
     </td>
     <td width="50%" valign="top">
       <h3>Limit orders and fees</h3>
-      Limit orders on Base and swap fee routing. New token launches run on
-      <a href="https://github.com/Latch-Protocol-Team/latch-sdk">Latch Protocol</a>; <code>tokenFactory</code> is PeddleSwap's earlier, retired launchpad.<br/>
+      Limit orders on Base and Arc, and swap fee routing. New token launches run on the Peddles launch contracts
+      (<a href="https://www.npmjs.com/package/@peddles/sdk"><code>@peddles/sdk</code></a>); <code>tokenFactory</code> is PeddleSwap's earlier, retired launchpad.<br/>
       <code>limitOrders</code> · <code>feeRouter</code>
     </td>
   </tr>
@@ -68,6 +69,7 @@ npm install @peddleswap/sdk viem
 |---|---|---|---|
 | Robinhood Chain | `4663` | `61044184` | [robin.etherscan.io](https://robin.etherscan.io) |
 | Base | `8453` | `51852486` | [basescan.org](https://basescan.org) |
+| Arc | `5042` | `23924361` | [arc.etherscan.io](https://arc.etherscan.io) |
 | Sepolia (testnet) | `11155111` | `11680694` | [sepolia.etherscan.io](https://sepolia.etherscan.io) |
 
 Everything is generated from the contracts repo's own build output — addresses from the
@@ -81,9 +83,16 @@ npm install @peddleswap/sdk viem
 
 `viem` is a peer dependency; bring your own so you don't end up with two copies.
 
-Three chains ship addresses: Robinhood Chain (`4663`), Base (`8453`) and Sepolia
+Four chains ship addresses: Robinhood Chain (`4663`), Base (`8453`), Arc (`5042`) and Sepolia
 (`11155111`). `tokenFactory` (Robinhood Chain and Sepolia only) is PeddleSwap's earlier launchpad and is
-retired: token launches now run on Latch Protocol. Anubis Chain (`6714`) is **registered but not yet deployed**: its viem
+retired: token launches now run on the Peddles launch contracts (`@peddles/sdk`).
+
+On Arc the gas coin is USDC (18 decimals natively) and the same balance is the ERC-20 at
+`0x3600000000000000000000000000000000000000` (6 decimals): trade the ERC-20, and never mix
+the two precisions. `addresses[5042].weth9` is PeddleSwap's own wrapped USDC, because Arc
+ships none.
+
+Anubis Chain (`6714`) is **registered but not yet deployed**: its viem
 definition ships in `chains` (and as `anubis`) so you can build a client for it, but
 `addresses` has no entry and `isSupportedChain(6714)` returns `false` until its contracts
 are live and a new version is published.
@@ -177,13 +186,13 @@ import { FEE_TIERS, tickSpacings } from "@peddleswap/sdk";
 ## Contracts that exist on one chain and not the other
 
 The deployments are not identical, and the address map is typed per chain to match.
-Limit orders are on Base and Sepolia; the launchpad (`tokenFactory`) is on Robinhood Chain
+Limit orders are on Base, Arc and Sepolia; the retired launchpad (`tokenFactory`) is on Robinhood Chain
 and Sepolia; the launchpad fee splitter is on Sepolia only:
 
 ```ts
 addresses[8453].limitOrders;  // fine
 addresses[4663].limitOrders;  // compile error — not deployed there
-addresses[8453].tokenFactory; // compile error — Base launches are Latch Protocol's
+addresses[8453].tokenFactory; // compile error — Base launches run on Peddles (@peddles/sdk)
 ```
 
 That is deliberate. A flat `Record<string, Address>` would let the second line compile and
@@ -196,7 +205,7 @@ exactly what `useChainId()` and every wallet event give you. Narrow it rather th
 ```ts
 import { addresses, isSupportedChain } from "@peddleswap/sdk";
 
-if (!isSupportedChain(chainId)) return null;   // chainId is now 4663 | 8453 | 11155111
+if (!isSupportedChain(chainId)) return null;   // chainId is now 4663 | 8453 | 5042 | 11155111
 const router = addresses[chainId].swapRouter02;
 ```
 

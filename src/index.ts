@@ -2,7 +2,8 @@
  * @peddleswap/sdk -- addresses, ABIs and chain definitions for PeddleSwap.
  *
  * Three deployments ship here: Robinhood Chain mainnet (4663), Base (8453) and Sepolia
- * (11155111). Base has no launchpad (`tokenFactory`): launches there are Latch Protocol's.
+ * (11155111). Base and Arc have no launchpad (`tokenFactory`): launches run on the Peddles launch
+ * contracts (`@peddles/sdk`).
  * Anubis Chain (6714) is registered -- its viem definition ships in `chains` -- but has no
  * addresses until its deploy lands; `isSupportedChain` is the gate for that.
  *
@@ -18,6 +19,7 @@ export * from "./generated/abis.js";
 
 export {
   anubis,
+  arc,
   base,
   chains,
   deploymentBlock,

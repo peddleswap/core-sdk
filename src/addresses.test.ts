@@ -33,14 +33,14 @@ const UNIVERSAL = [
   "weth9",
 ] as const;
 
-/** The launchpad, deployed where PeddleSwap runs launches. Base's are Latch Protocol's. */
+/** PeddleSwap's own, retired token factory. Launches now run on Peddles (`@peddles/sdk`). */
 const LAUNCHPAD_CHAINS = [4663, 11155111] as const;
 
 describe("addresses", () => {
   it("ships every deployed chain", () => {
     // Numeric comparator, not the default: `sort()` stringifies, and as strings
     // "11155111" sorts before "4663". The same trap `sortTokens` exists to avoid.
-    expect([...chainIds].sort((a, b) => a - b)).toEqual([4663, 8453, 11155111]);
+    expect([...chainIds].sort((a, b) => a - b)).toEqual([4663, 5042, 8453, 11155111]);
   });
 
   it.each(chainIds)("chain %i has every universal contract", (id) => {
@@ -107,6 +107,7 @@ describe("addresses", () => {
     expect(deploymentBlock[11155111]).toBe(11680694n);
     expect(deploymentBlock[4663]).toBe(61044184n);
     expect(deploymentBlock[8453]).toBe(51852486n);
+    expect(deploymentBlock[5042]).toBe(23924361n);
   });
 
   it("narrows a plain number through isSupportedChain", () => {
@@ -120,7 +121,7 @@ describe("addresses", () => {
     if (isSupportedChain(fromWallet)) {
       expect(addresses[fromWallet].swapRouter02).toMatch(/^0x[0-9a-fA-F]{40}$/);
     }
-    expect([...supportedChainIds].sort((a, b) => a - b)).toEqual([4663, 8453, 11155111]);
+    expect([...supportedChainIds].sort((a, b) => a - b)).toEqual([4663, 5042, 8453, 11155111]);
   });
 
   it("declares multicall3 so viem can batch", () => {
@@ -158,5 +159,15 @@ describe("addresses", () => {
     // runtime half of that; the type half is checked by `tsc` over this file.
     expect(addresses[11155111]).toHaveProperty("limitOrders");
     expect(addresses[4663]).not.toHaveProperty("limitOrders");
+  });
+
+  it("ships Arc with its own wrapped native and USDC as the gas coin", () => {
+    expect(isSupportedChain(5042)).toBe(true);
+    expect(chains[5042].nativeCurrency).toMatchObject({ symbol: "USDC", decimals: 18 });
+    expect(chains[5042].contracts?.multicall3?.address).toBe("0xcA11bde05977b3631167028862bE2a173976CA11");
+    // PeddleSwap's WrappedNative, deployed 2026-10-02; Arc has no chain-provided wrapper.
+    expect(addresses[5042].weth9).toBe("0x0482B678A56c65Bb96Aa82576d8B50a178a35613");
+    expect(addresses[5042]).toHaveProperty("limitOrders");
+    expect(addresses[5042]).not.toHaveProperty("tokenFactory");
   });
 });

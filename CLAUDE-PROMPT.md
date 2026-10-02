@@ -29,7 +29,7 @@ SETUP
   RPC lists and Multicall3: `createPublicClient({ chain: chains[id], transport: http() })`.
 
 CHAINS - support all of them, never hard-code one
-- Deployed: Robinhood Chain 4663, Base 8453, Sepolia 11155111 (testnet). Iterate
+- Deployed: Robinhood Chain 4663, Base 8453, Arc 5042, Sepolia 11155111 (testnet). Iterate
   `supportedChainIds` instead of listing ids, so a chain added in a later SDK version works
   without code changes. `chains` also includes Anubis 6714, which is registered but NOT
   deployed; only `isSupportedChain(id)` decides whether PeddleSwap contracts exist there.
@@ -38,12 +38,16 @@ CHAINS - support all of them, never hard-code one
   `addresses[chainId as SupportedChainId]`: on an unsupported chain it yields undefined and
   a transaction can go to the zero address.
 - Not every contract is on every chain. Check with `"key" in addresses[id]`:
-    tokenFactory (launchpad): 4663 and 11155111 only (token launches on Base are Latch Protocol's)
-    limitOrders:              8453 and 11155111 only
+    tokenFactory (retired launchpad): 4663 and 11155111 only (new launches run on Peddles, @peddles/sdk)
+    limitOrders:              8453, 5042 and 11155111 only
   Everything else (v2Factory, v2Router, v3Factory, v3PoolDeployer, positionManager,
   swapRouter02, swapRouter, quoterV2, quoter, mixedRouteQuoter, tickLens, lockerERC20,
   lockerERC721, feeRouter, dynamicFeeModule, v3FeeAdapter, tokenValidator,
-  interfaceMulticall, weth9, tokenDescriptor) is on all three.
+  interfaceMulticall, weth9, tokenDescriptor) is on all four.
+- Arc 5042: the gas coin is USDC with 18 decimals natively, and the same balance is the
+  ERC-20 at 0x3600000000000000000000000000000000000000 with 6. Trade the ERC-20 like any
+  token; never mix the two precisions. `addresses[5042].weth9` is PeddleSwap's own wrapped
+  USDC (Arc ships none).
 - WETH differs per chain: always `addresses[id].weth9`, never a constant.
 - Show users which chain each item is on (chain name/logo), and switch the wallet to that
   chain only when they act, not when they browse.
