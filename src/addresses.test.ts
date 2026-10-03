@@ -152,13 +152,17 @@ describe("addresses", () => {
     );
   });
 
-  it("keeps limit orders off chains that do not have them", () => {
-    // Sepolia carries `limitOrders` and `launchpadFee`; Robinhood Chain does not yet. The
-    // per-chain object literals make `addresses[4663].limitOrders` a compile error rather
-    // than an undefined that becomes a transaction to the zero address. This asserts the
-    // runtime half of that; the type half is checked by `tsc` over this file.
-    expect(addresses[11155111]).toHaveProperty("limitOrders");
-    expect(addresses[4663]).not.toHaveProperty("limitOrders");
+  it("keeps a contract off chains that do not have it", () => {
+    // Sepolia carries `launchpadFee`; the mainnets do not. The per-chain object literals
+    // make `addresses[4663].launchpadFee` a compile error rather than an undefined that
+    // becomes a transaction to the zero address. This asserts the runtime half of that;
+    // the type half is checked by `tsc` over this file.
+    expect(addresses[11155111]).toHaveProperty("launchpadFee");
+    expect(addresses[4663]).not.toHaveProperty("launchpadFee");
+  });
+
+  it("has a limit-order book on every chain since Robinhood Chain got one (2026-10-03)", () => {
+    for (const id of [4663, 8453, 5042, 11155111] as const) expect(addresses[id]).toHaveProperty("limitOrders");
   });
 
   it("ships Arc with its own wrapped native and USDC as the gas coin", () => {

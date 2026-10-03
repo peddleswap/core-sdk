@@ -186,12 +186,12 @@ import { FEE_TIERS, tickSpacings } from "@peddleswap/sdk";
 ## Contracts that exist on one chain and not the other
 
 The deployments are not identical, and the address map is typed per chain to match.
-Limit orders are on Base, Arc and Sepolia; the retired launchpad (`tokenFactory`) is on Robinhood Chain
+Limit orders are on every chain; the retired launchpad (`tokenFactory`) is on Robinhood Chain
 and Sepolia; the launchpad fee splitter is on Sepolia only:
 
 ```ts
-addresses[8453].limitOrders;  // fine
-addresses[4663].limitOrders;  // compile error — not deployed there
+addresses[4663].limitOrders;  // fine
+addresses[4663].launchpadFee; // compile error — not deployed there
 addresses[8453].tokenFactory; // compile error — Base launches run on Peddles (@peddles/sdk)
 ```
 
